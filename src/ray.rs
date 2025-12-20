@@ -8,6 +8,7 @@ use crate::vec3::Vec3;
 pub type Point3 = Vec3;
 
 /// 三维空间中的射线，包含起始点以及方向向量。
+#[derive(Copy, Clone, Debug)]
 pub struct Ray {
     pub origin: Point3,
     pub direction: Vec3,

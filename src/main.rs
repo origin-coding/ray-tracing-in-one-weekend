@@ -14,8 +14,23 @@ const MAX_COLOR_VALUE: i32 = 255;
 const IMAGE_WIDTH: i32 = 256;
 const IMAGE_HEIGHT: i32 = 256;
 
+/// 判断光线是否与球体发生碰撞
+fn hit_sphere(center: Point3, radius: f64, r: Ray) -> bool {
+    let oc = r.origin - center;
+    let a = Vec3::dot(r.direction, r.direction);
+    let b = -2.0 * Vec3::dot(r.direction, oc);
+    let c = Vec3::dot(oc, oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant >= 0.0
+}
+
 /// 计算射线颜色
-fn ray_color(r: &Ray) -> Color {
+fn ray_color(r: Ray) -> Color {
+    // 如果命中了球体，那么返回红色
+    if hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, r) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
+
     // 这里实现一个从蓝色到白色的线性差值
     let unit_direction = r.direction.unit_vector();
     let a = 0.5 * (unit_direction.y + 1.0);
@@ -64,8 +79,8 @@ fn main() {
             let pixel_center = pixel_00_loc + x as f64 * pixel_delta_u + y as f64 * pixel_delta_v;
             let ray_direction = pixel_center - camera_center;
             let ray = Ray::new(camera_center, ray_direction);
-            let color = ray_color(&ray);
-            write_color(&mut stdout, &color).expect("Failed to write color to stdout");
+            let color = ray_color(ray);
+            write_color(&mut stdout, color).expect("Failed to write color to stdout");
         }
     }
     eprintln!("\nDone.");

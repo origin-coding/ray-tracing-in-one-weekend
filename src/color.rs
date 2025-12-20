@@ -7,7 +7,7 @@ use crate::vec3::Vec3;
 pub type Color = Vec3;
 
 /// 将颜色输出到流中。
-pub fn write_color<W : Write>(out: &mut W, color: &Color) -> std::io::Result<()>{
+pub fn write_color<W : Write>(out: &mut W, color: Color) -> std::io::Result<()>{
     // 获取 r, g, b (假设 Vec3 的 x, y, z 对应 r, g, b)
     let r = color.x;
     let g = color.y;

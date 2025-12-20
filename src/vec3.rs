@@ -54,22 +54,22 @@ impl Vec3 {
     }
 
     /// 计算向量的模长平方，在某些场景下可以简化向量的比较，避免开方运算造成性能损失。
-    pub fn length_squared(&self) -> f64 {
+    pub fn length_squared(self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
     /// 计算向量的模长，即向量的长度。
-    pub fn length(&self) -> f64 {
+    pub fn length(self) -> f64 {
         self.length_squared().sqrt()
     }
 
     /// 计算两个向量的点积。
-    pub fn dot(&self, other: Vec3) -> f64 {
+    pub fn dot(self, other: Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
     /// 叉积，返回两个向量的叉积向量。
-    pub fn cross(&self, other: Vec3) -> Vec3 {
+    pub fn cross(self, other: Vec3) -> Vec3 {
         Vec3 {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
@@ -81,12 +81,12 @@ impl Vec3 {
     ///
     /// # 安全性
     /// 如果向量模长接近于 0，则返回零向量，这里参考了 Unity 的实现。
-    pub fn unit_vector(&self) -> Vec3 {
+    pub fn unit_vector(self) -> Vec3 {
         let len = self.length();
         // 如果模长太小，为了避免除以 0 产生 NaN，直接返回零向量
         // 1e-8 是一个很小的数，足以应对浮点误差
         if len > 1e-8 {
-            *self / len
+            self / len
         } else {
             Vec3::zero()
         }
