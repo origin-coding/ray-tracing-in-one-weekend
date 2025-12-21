@@ -1,11 +1,19 @@
 #![allow(dead_code)]
 
 mod color;
+mod hittable;
+mod hittable_list;
+mod interval;
 mod ray;
+mod sphere;
 mod vec3;
 
 use crate::color::{Color, write_color};
+use crate::hittable::Hittable;
+use crate::hittable_list::HittableList;
+use crate::interval::Interval;
 use crate::ray::{Point3, Ray};
+use crate::sphere::Sphere;
 use crate::vec3::Vec3;
 
 const P3_MAGIC_NUMBER: &str = "P3";
@@ -14,21 +22,11 @@ const MAX_COLOR_VALUE: i32 = 255;
 const IMAGE_WIDTH: i32 = 256;
 const IMAGE_HEIGHT: i32 = 256;
 
-/// 判断光线是否与球体发生碰撞
-fn hit_sphere(center: Point3, radius: f64, r: Ray) -> bool {
-    let oc = r.origin - center;
-    let a = Vec3::dot(r.direction, r.direction);
-    let b = -2.0 * Vec3::dot(r.direction, oc);
-    let c = Vec3::dot(oc, oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    discriminant >= 0.0
-}
-
 /// 计算射线颜色
-fn ray_color(r: Ray) -> Color {
-    // 如果命中了球体，那么返回红色
-    if hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, r) {
-        return Color::new(1.0, 0.0, 0.0);
+fn ray_color(r: Ray, world: &dyn Hittable) -> Color {
+    // 如果命中了物体，那么计算物体颜色
+    if let Some(rec) = world.hit(r, Interval::new(0.001, f64::INFINITY)) {
+        return 0.5 * (rec.normal + Color::one());
     }
 
     // 这里实现一个从蓝色到白色的线性差值
@@ -65,6 +63,13 @@ fn main() {
         camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel_00_loc = viewport_up_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
+    // 创建世界
+    let mut world = HittableList::new();
+    // 在画布中心添加球体（我们之前做的）
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    // 在画布下方添加一个巨大的球体，用于模拟地面
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
+
     // 开始渲染
     println!(
         "{}\n{} {}\n{}",
@@ -79,7 +84,7 @@ fn main() {
             let pixel_center = pixel_00_loc + x as f64 * pixel_delta_u + y as f64 * pixel_delta_v;
             let ray_direction = pixel_center - camera_center;
             let ray = Ray::new(camera_center, ray_direction);
-            let color = ray_color(ray);
+            let color = ray_color(ray, &world);
             write_color(&mut stdout, color).expect("Failed to write color to stdout");
         }
     }
