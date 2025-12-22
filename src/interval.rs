@@ -20,7 +20,7 @@ impl Interval {
     };
 
     /// 创建一个新的时间区间。
-    pub fn new(min: f64, max: f64) -> Self {
+    pub const fn new(min: f64, max: f64) -> Self {
         Self { min, max }
     }
 
