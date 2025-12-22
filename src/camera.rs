@@ -6,8 +6,8 @@ use crate::vec3::Vec3;
 
 #[allow(dead_code)]
 pub struct Camera {
-    pub aspect_ratio: f64,
-    pub image_width: i32,
+    aspect_ratio: f64,
+    image_width: i32,
     // 私有字段
     image_height: i32,
     center: Point3,

@@ -33,9 +33,9 @@ impl Hittable for Sphere {
         };
 
         // 有解，那么尝试计算两个解，并且找出在 t_min 和 t_max 之间的解，如果没有，那么返回 None
-        let root = (h - discriminant.sqrt()) / a;
+        let mut root = (h - discriminant.sqrt()) / a;
         if !interval.surrounds(root) {
-            let root = (h + discriminant.sqrt()) / a;
+            root = (h + discriminant.sqrt()) / a;
             if !interval.surrounds(root) {
                 return None;
             };
