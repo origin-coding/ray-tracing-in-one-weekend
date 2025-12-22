@@ -4,8 +4,8 @@ use crate::color::{Color, write_color};
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::{Point3, Ray};
+use crate::utils::random_double_range_inclusive;
 use crate::vec3::Vec3;
-use rand::Rng;
 
 /// 相机类型定义。
 ///
@@ -124,8 +124,8 @@ impl Camera {
     /// 一个随机向量，用于偏移像素采样点。
     fn sample_square(&self) -> Vec3 {
         Vec3::new(
-            rand::rng().random_range(-0.5..=0.5),
-            rand::rng().random_range(-0.5..=0.5),
+            random_double_range_inclusive(-0.5, 0.5),
+            random_double_range_inclusive(-0.5, 0.5),
             0.0,
         )
     }

@@ -1,16 +1,7 @@
-mod camera;
-mod color;
-mod hittable;
-mod hittable_list;
-mod interval;
-mod ray;
-mod sphere;
-mod vec3;
-
-use crate::camera::Camera;
-use crate::hittable_list::HittableList;
-use crate::ray::Point3;
-use crate::sphere::Sphere;
+use ray_tracing_in_one_weekend::camera::Camera;
+use ray_tracing_in_one_weekend::hittable_list::HittableList;
+use ray_tracing_in_one_weekend::ray::Point3;
+use ray_tracing_in_one_weekend::sphere::Sphere;
 
 fn main() {
     // 创建世界，添加两个球体
