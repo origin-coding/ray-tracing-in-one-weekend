@@ -5,6 +5,7 @@ use crate::ray::{Point3, Ray};
 use crate::vec3::Vec3;
 
 /// 碰撞记录
+#[allow(dead_code)]
 pub struct HitRecord {
     /// 碰撞点
     pub p: Point3,

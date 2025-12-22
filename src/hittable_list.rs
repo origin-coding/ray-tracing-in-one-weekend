@@ -21,6 +21,7 @@ impl HittableList {
     }
 
     /// 清空物体列表
+    #[allow(dead_code)]
     pub fn clear(&mut self) {
         self.objects.clear();
     }

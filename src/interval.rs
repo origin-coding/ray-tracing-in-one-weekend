@@ -6,6 +6,7 @@ pub struct Interval {
     pub max: f64,
 }
 
+#[allow(dead_code)]
 impl Interval {
     /// 空区间，任何时间点都无法被包含在其中。
     pub const EMPTY: Self = Self {
