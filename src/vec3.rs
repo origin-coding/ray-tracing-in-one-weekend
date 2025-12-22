@@ -141,6 +141,23 @@ impl Vec3 {
         // 1e-8 是一个很小的数，足以应对浮点误差
         if len > 1e-8 { self / len } else { Vec3::zero() }
     }
+
+    /// 向量是否在各个方向上都接近 0
+    #[inline]
+    pub fn near_zero(self) -> bool {
+        const EPSILON: f64 = 1e-8;
+        self.x.abs() < EPSILON && self.y.abs() < EPSILON && self.z.abs() < EPSILON
+    }
+
+    /// 计算反射向量
+    /// 计算入射向量关于法线的反射向量。
+    ///
+    /// # 参数
+    /// * `normal` - 法线向量，必须是单位向量。
+    #[inline]
+    pub fn reflect(self, normal: Vec3) -> Vec3 {
+        self - normal * 2.0 * self.dot(normal)
+    }
 }
 
 /// 创建一个默认的零向量。

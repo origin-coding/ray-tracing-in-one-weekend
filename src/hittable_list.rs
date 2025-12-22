@@ -28,7 +28,7 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: Ray, interval: Interval) -> Option<HitRecord> {
+    fn hit(&self, r: Ray, interval: Interval) -> Option<HitRecord<'_>> {
         let mut hit_record = None;
         let mut closest_so_far = interval.max;
         for object in &self.objects {

@@ -1,6 +1,6 @@
 //! 相机定义以及相关工具方法。
 
-use crate::color::{Color, write_color};
+use crate::color::{write_color, Color};
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::{Point3, Ray};
@@ -102,8 +102,11 @@ impl Camera {
 
         // 如果命中了物体，那么计算物体颜色
         if let Some(rec) = world.hit(r, Interval::new(0.001, f64::INFINITY)) {
-            let direction = Vec3::random_on_hemisphere(rec.normal);
-            return 0.5 * self.ray_color(Ray::new(rec.p, direction), world, depth - 1);
+            return if let Some((albedo, scattered)) = rec.mat.scatter(r, &rec) {
+                albedo * self.ray_color(scattered, world, depth - 1)
+            } else {
+                Color::zero()
+            };
         }
 
         // 这里实现一个从蓝色到白色的线性差值

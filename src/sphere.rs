@@ -2,26 +2,33 @@
 
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
+use crate::material::Material;
 use crate::ray::{Point3, Ray};
 use crate::vec3::Vec3;
+use std::rc::Rc;
 
 /// 球体类型定义，包含球心和半径。
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
+    pub mat: Rc<dyn Material>,
 }
 
 impl Sphere {
     /// 创建一个新的球体实例。
-    pub fn new(center: Point3, radius: f64) -> Self {
+    pub fn new(center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
         // 防止半径为负数
         let radius = if radius < 0.0 { 0.0 } else { radius };
-        Sphere { center, radius }
+        Self {
+            center,
+            radius,
+            mat,
+        }
     }
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: Ray, interval: Interval) -> Option<HitRecord> {
+    fn hit(&self, r: Ray, interval: Interval) -> Option<HitRecord<'_>> {
         // 首先计算判别式，并在没有解的情况下直接返回 None
         let oc = self.center - r.origin;
         let a = r.direction.length_squared();
@@ -44,6 +51,12 @@ impl Hittable for Sphere {
         // 有解，并且在 t_min 和 t_max 之间，计算 HitRecord
         let point = r.at(root);
         let outward_normal = (point - self.center) / self.radius;
-        Some(HitRecord::new(point, outward_normal, root, r))
+        Some(HitRecord::new(
+            point,
+            outward_normal,
+            root,
+            r,
+            self.mat.as_ref(),
+        ))
     }
 }
