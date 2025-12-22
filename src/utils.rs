@@ -19,3 +19,13 @@ pub fn random_double_range(min: f64, max: f64) -> f64 {
 pub fn random_double_range_inclusive(min: f64, max: f64) -> f64 {
     rand::rng().random_range(min..=max)
 }
+
+/// 将线性空间的分量转换为 gamma 空间的分量。
+#[inline]
+pub fn linear_to_gamma(linear_component: f64) -> f64 {
+    if linear_component >= 0.0 {
+        linear_component.sqrt()
+    } else {
+        0.0
+    }
+}

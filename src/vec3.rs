@@ -85,11 +85,23 @@ impl Vec3 {
         loop {
             let random_vector = Self::random_range(-1.0, 1.0);
             let length_squared = random_vector.length_squared();
-            if length_squared >= 1e-6 && length_squared <= 1.0 {
+            if length_squared >= 1e-160 && length_squared <= 1.0 {
                 break random_vector / length_squared.sqrt();
             }
         }
     }
+
+    /// 创建一个随机单位向量，向量的每个分量都在 [-1, 1) 范围内，且与给定法线的点积大于 0。
+    #[inline]
+    pub fn random_on_hemisphere(normal: Vec3) -> Self {
+        let on_unit_sphere = Self::random_unit();
+        if on_unit_sphere.dot(normal) > 0.0 {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
+    }
+
     /// 计算向量的模长平方，在某些场景下可以简化向量的比较，避免开方运算造成性能损失。
     #[inline]
     pub fn length_squared(self) -> f64 {

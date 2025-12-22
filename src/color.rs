@@ -1,6 +1,7 @@
 //! 颜色定义以及相关工具方法。
 
 use crate::interval::Interval;
+use crate::utils::linear_to_gamma;
 use crate::vec3::Vec3;
 use std::io::Write;
 
@@ -12,9 +13,9 @@ const INTENSITY: Interval = Interval::new(0.0, 0.999);
 /// 将颜色输出到流中。
 pub fn write_color<W: Write>(out: &mut W, color: Color) -> std::io::Result<()> {
     // 获取 r, g, b (假设 Vec3 的 x, y, z 对应 r, g, b)
-    let r = color.x;
-    let g = color.y;
-    let b = color.z;
+    let r = linear_to_gamma(color.x);
+    let g = linear_to_gamma(color.y);
+    let b = linear_to_gamma(color.z);
 
     // 将 [0,1] 转换为 [0,255]
     // 这里暂时直接转换，书的后面章节会加入 Gamma 校正和 Clamp 限制

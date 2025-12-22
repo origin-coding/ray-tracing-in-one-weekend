@@ -19,6 +19,7 @@ pub struct Camera {
     aspect_ratio: f64,
     image_width: i32,
     samples_per_pixel: i32,
+    max_depth: i32,
 
     image_height: i32,
     center: Point3,
@@ -39,7 +40,13 @@ impl Camera {
     /// * `aspect_ratio` - 相机的宽高比，通常为 16:9 或 4:3。
     /// * `image_width` - 相机输出的图像宽度，单位为像素。
     /// * `samples_per_pixel` - 每个像素采样的次数，用于抗锯齿。
-    pub fn new(aspect_ratio: f64, image_width: i32, samples_per_pixel: i32) -> Self {
+    /// * `max_depth` - 递归深度，用于控制反射次数。
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: i32,
+        samples_per_pixel: i32,
+        max_depth: i32,
+    ) -> Self {
         // 计算画布高度
         let image_height = (image_width as f64 / aspect_ratio) as i32;
         let image_height = if image_height < 1 { 1 } else { image_height };
@@ -67,6 +74,7 @@ impl Camera {
             aspect_ratio,
             image_width,
             samples_per_pixel,
+            max_depth,
             image_height,
             center,
             pixel_00_loc,
@@ -86,10 +94,16 @@ impl Camera {
     /// # 返回值
     ///
     /// 射线的颜色。
-    fn ray_color(&self, r: Ray, world: &dyn Hittable) -> Color {
+    fn ray_color(&self, r: Ray, world: &dyn Hittable, depth: i32) -> Color {
+        // 如果递归深度为 0，那么返回黑色
+        if depth <= 0 {
+            return Color::zero();
+        }
+
         // 如果命中了物体，那么计算物体颜色
         if let Some(rec) = world.hit(r, Interval::new(0.001, f64::INFINITY)) {
-            return 0.5 * (rec.normal + Color::one());
+            let direction = Vec3::random_on_hemisphere(rec.normal);
+            return 0.5 * self.ray_color(Ray::new(rec.p, direction), world, depth - 1);
         }
 
         // 这里实现一个从蓝色到白色的线性差值
@@ -154,7 +168,7 @@ impl Camera {
                 let mut color = Color::zero();
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(x, y);
-                    color += self.ray_color(ray, world);
+                    color += self.ray_color(ray, world, self.max_depth);
                 }
                 color *= self.samples_per_scale;
 
@@ -168,8 +182,8 @@ impl Camera {
 impl Default for Camera {
     /// 创建一个默认的相机实例。
     ///
-    /// 默认的相机宽高比为 16:9，图像宽度为 400 像素，每个像素采样 100 次。
+    /// 默认的相机宽高比为 16:9，图像宽度为 100 像素，每个像素采样 100 次。
     fn default() -> Self {
-        Self::new(16.0 / 9.0, 400, 100)
+        Self::new(16.0 / 9.0, 100, 100, 10)
     }
 }
