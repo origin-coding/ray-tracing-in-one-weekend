@@ -102,6 +102,22 @@ impl Vec3 {
         }
     }
 
+    /// 创建一个在单位圆盘上面的随机向量
+    #[inline]
+    pub fn random_in_unit_disk() -> Self {
+        loop {
+            let random_vector = Self::new(
+                random_double_range(-1.0, 1.0),
+                random_double_range(-1.0, 1.0),
+                0.0,
+            );
+            let distance_squared = random_vector.length_squared();
+            if distance_squared < 1.0 {
+                break random_vector;
+            }
+        }
+    }
+
     /// 计算向量的模长平方，在某些场景下可以简化向量的比较，避免开方运算造成性能损失。
     #[inline]
     pub fn length_squared(self) -> f64 {

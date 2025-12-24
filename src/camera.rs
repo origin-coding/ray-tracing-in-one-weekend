@@ -4,7 +4,7 @@ use crate::color::{Color, write_color};
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::{Point3, Ray};
-use crate::utils::{degrees_to_radians, random_double_range_inclusive};
+use crate::utils::random_double_range_inclusive;
 use crate::vec3::Vec3;
 
 /// 相机构建参数
@@ -24,6 +24,8 @@ pub struct CameraBuilder {
     look_from: Point3,
     look_at: Point3,
     up: Vec3,
+    defocus_angle: f64,
+    focus_dist: f64,
 }
 
 impl Default for CameraBuilder {
@@ -37,6 +39,8 @@ impl Default for CameraBuilder {
             look_from: Point3::zero(),
             look_at: -Point3::unit_z(),
             up: Vec3::unit_y(),
+            defocus_angle: 0.0,
+            focus_dist: 10.0,
         }
     }
 }
@@ -82,17 +86,26 @@ impl CameraBuilder {
         self
     }
 
+    pub fn defocus_angle(mut self, defocus_angle: f64) -> Self {
+        self.defocus_angle = defocus_angle;
+        self
+    }
+
+    pub fn focus_dist(mut self, focus_dist: f64) -> Self {
+        self.focus_dist = focus_dist;
+        self
+    }
+
     pub fn build(self) -> Camera {
         // 计算画布高度
         let image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
         let image_height = if image_height < 1 { 1 } else { image_height };
 
         // 计算视窗宽高
-        let focal_length = (self.look_from - self.look_at).length();
-        let theta = degrees_to_radians(self.vfov);
+        let theta = self.vfov.to_radians();
         let h = (theta / 2.0).tan();
 
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * self.focus_dist;
         let viewport_width = viewport_height * (self.image_width as f64 / image_height as f64);
         let center = self.look_from;
 
@@ -110,8 +123,13 @@ impl CameraBuilder {
         let pixel_delta_v = viewport_v / image_height as f64;
 
         // 计算图像左上角的坐标
-        let viewport_up_left = center - focal_length * w - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_up_left = center - (self.focus_dist * w) - viewport_u / 2.0 - viewport_v / 2.0;
         let pixel_00_loc = viewport_up_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+        // 计算散焦基础向量
+        let defocus_radius = self.focus_dist * (self.defocus_angle / 2.0).to_radians().tan();
+        let defocus_disk_u = u * defocus_radius;
+        let defocus_disk_v = v * defocus_radius;
 
         Camera {
             aspect_ratio: self.aspect_ratio,
@@ -125,6 +143,9 @@ impl CameraBuilder {
             pixel_delta_u,
             pixel_delta_v,
             samples_per_scale: 1.0 / (self.samples_per_pixel as f64),
+            defocus_angle: self.defocus_angle,
+            defocus_disk_u,
+            defocus_disk_v,
         }
     }
 }
@@ -143,13 +164,15 @@ pub struct Camera {
     samples_per_pixel: i32,
     max_depth: i32,
     vfov: f64,
-
     image_height: i32,
     center: Point3,
     pixel_00_loc: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     samples_per_scale: f64,
+    defocus_angle: f64,
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
 }
 
 impl Camera {
@@ -202,8 +225,15 @@ impl Camera {
         let pixel_center = self.pixel_00_loc
             + (x as f64 + offset.x) * self.pixel_delta_u
             + (y as f64 + offset.y) * self.pixel_delta_v;
+
         let ray_direction = pixel_center - self.center;
-        Ray::new(self.center, ray_direction)
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center
+        } else {
+            self.defocus_disk_sample()
+        };
+
+        Ray::new(ray_origin, ray_direction)
     }
 
     /// 生成一个随机偏移量，用于抗锯齿。
@@ -217,6 +247,12 @@ impl Camera {
             random_double_range_inclusive(-0.5, 0.5),
             0.0,
         )
+    }
+
+    /// 生成镜头上的随机采样点
+    fn defocus_disk_sample(&self) -> Vec3 {
+        let vec = Vec3::random_in_unit_disk();
+        self.center + vec.x * self.defocus_disk_u + vec.y * self.defocus_disk_v
     }
 
     /// 渲染场景并输出图像。
