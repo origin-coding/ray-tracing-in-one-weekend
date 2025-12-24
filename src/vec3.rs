@@ -158,6 +158,20 @@ impl Vec3 {
     pub fn reflect(self, normal: Vec3) -> Vec3 {
         self - normal * 2.0 * self.dot(normal)
     }
+
+    /// 计算折射向量
+    /// 计算入射向量关于法线的折射向量。
+    ///
+    /// # 参数
+    /// * `normal` - 法线向量，必须是单位向量。
+    /// * `etai_over_etat` - 折射索引比，即入射介质的折射率除以折射介质的折射率。
+    #[inline]
+    pub fn refract(self, normal: Vec3, etai_over_etat: f64) -> Vec3 {
+        let cos_theta = (-self).dot(normal).min(1.0);
+        let r_out_perp = etai_over_etat * (self + cos_theta * normal);
+        let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * normal;
+        r_out_perp + r_out_parallel
+    }
 }
 
 /// 创建一个默认的零向量。
