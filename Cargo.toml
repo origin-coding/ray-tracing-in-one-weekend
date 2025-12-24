@@ -2,6 +2,7 @@
 name = "ray-tracing-in-one-weekend"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
 
 [dependencies]
 rand = "0.9.2"
