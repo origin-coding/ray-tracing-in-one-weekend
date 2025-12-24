@@ -1,11 +1,133 @@
-//! 相机定义以及相关工具方法。
+//! 相机和Builder的定义以及相关工具方法。
 
-use crate::color::{write_color, Color};
+use crate::color::{Color, write_color};
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::{Point3, Ray};
-use crate::utils::random_double_range_inclusive;
+use crate::utils::{degrees_to_radians, random_double_range_inclusive};
 use crate::vec3::Vec3;
+
+/// 相机构建参数
+///
+/// 使用方法：
+/// ```
+/// use ray_tracing_in_one_weekend::camera::CameraBuilder;
+/// let camera = CameraBuilder::default().build();
+/// /// camera.xxx()
+/// ```
+pub struct CameraBuilder {
+    aspect_ratio: f64,
+    image_width: i32,
+    samples_per_pixel: i32,
+    max_depth: i32,
+    vfov: f64,
+    look_from: Point3,
+    look_at: Point3,
+    up: Vec3,
+}
+
+impl Default for CameraBuilder {
+    fn default() -> Self {
+        Self {
+            aspect_ratio: 16.0 / 9.0,
+            image_width: 100,
+            samples_per_pixel: 100,
+            max_depth: 10,
+            vfov: 90.0,
+            look_from: Point3::zero(),
+            look_at: -Point3::unit_z(),
+            up: Vec3::unit_y(),
+        }
+    }
+}
+
+impl CameraBuilder {
+    pub fn aspect_ratio(mut self, aspect_ratio: f64) -> Self {
+        self.aspect_ratio = aspect_ratio;
+        self
+    }
+
+    pub fn image_width(mut self, image_width: i32) -> Self {
+        self.image_width = image_width;
+        self
+    }
+
+    pub fn samples_per_pixel(mut self, samples_per_pixel: i32) -> Self {
+        self.samples_per_pixel = samples_per_pixel;
+        self
+    }
+
+    pub fn max_depth(mut self, max_depth: i32) -> Self {
+        self.max_depth = max_depth;
+        self
+    }
+
+    pub fn vfov(mut self, vfov: f64) -> Self {
+        self.vfov = vfov;
+        self
+    }
+
+    pub fn look_from(mut self, look_from: Point3) -> Self {
+        self.look_from = look_from;
+        self
+    }
+
+    pub fn look_at(mut self, look_at: Point3) -> Self {
+        self.look_at = look_at;
+        self
+    }
+
+    pub fn up(mut self, up: Vec3) -> Self {
+        self.up = up;
+        self
+    }
+
+    pub fn build(self) -> Camera {
+        // 计算画布高度
+        let image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
+        let image_height = if image_height < 1 { 1 } else { image_height };
+
+        // 计算视窗宽高
+        let focal_length = (self.look_from - self.look_at).length();
+        let theta = degrees_to_radians(self.vfov);
+        let h = (theta / 2.0).tan();
+
+        let viewport_height = 2.0 * h * focal_length;
+        let viewport_width = viewport_height * (self.image_width as f64 / image_height as f64);
+        let center = self.look_from;
+
+        // 计算相机的 w u v 坐标单位向量
+        let w = (self.look_from - self.look_at).unit_vector();
+        let u = Vec3::cross(self.up, w).unit_vector();
+        let v = Vec3::cross(w, u);
+
+        // 计算视窗边缘的向量
+        let viewport_u = viewport_width * u;
+        let viewport_v = viewport_height * -v;
+
+        // 计算每个像素的 Delta 向量
+        let pixel_delta_u = viewport_u / self.image_width as f64;
+        let pixel_delta_v = viewport_v / image_height as f64;
+
+        // 计算图像左上角的坐标
+        let viewport_up_left = center - focal_length * w - viewport_u / 2.0 - viewport_v / 2.0;
+        let pixel_00_loc = viewport_up_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+        Camera {
+            aspect_ratio: self.aspect_ratio,
+            image_width: self.image_width,
+            samples_per_pixel: self.samples_per_pixel,
+            max_depth: self.max_depth,
+            vfov: self.vfov,
+            image_height,
+            center,
+            pixel_00_loc,
+            pixel_delta_u,
+            pixel_delta_v,
+            samples_per_scale: 1.0 / (self.samples_per_pixel as f64),
+        }
+    }
+}
 
 /// 相机类型定义。
 ///
@@ -20,6 +142,7 @@ pub struct Camera {
     image_width: i32,
     samples_per_pixel: i32,
     max_depth: i32,
+    vfov: f64,
 
     image_height: i32,
     center: Point3,
@@ -32,57 +155,6 @@ pub struct Camera {
 impl Camera {
     const P3_MAGIC_NUMBER: &str = "P3";
     const MAX_COLOR_VALUE: i32 = 255;
-
-    /// 创建一个新的相机实例。
-    ///
-    /// # 参数
-    ///
-    /// * `aspect_ratio` - 相机的宽高比，通常为 16:9 或 4:3。
-    /// * `image_width` - 相机输出的图像宽度，单位为像素。
-    /// * `samples_per_pixel` - 每个像素采样的次数，用于抗锯齿。
-    /// * `max_depth` - 递归深度，用于控制反射次数。
-    pub fn new(
-        aspect_ratio: f64,
-        image_width: i32,
-        samples_per_pixel: i32,
-        max_depth: i32,
-    ) -> Self {
-        // 计算画布高度
-        let image_height = (image_width as f64 / aspect_ratio) as i32;
-        let image_height = if image_height < 1 { 1 } else { image_height };
-
-        // 计算视窗宽高
-        let focal_length = 1.0;
-        let viewport_height = 2.0;
-        let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
-        let center = Point3::zero();
-
-        // 计算视窗边缘的向量
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
-
-        // 计算每个像素的 Delta 向量
-        let pixel_delta_u = viewport_u / image_width as f64;
-        let pixel_delta_v = viewport_v / image_height as f64;
-
-        // 计算图像左上角的坐标
-        let viewport_up_left =
-            center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
-        let pixel_00_loc = viewport_up_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-
-        Self {
-            aspect_ratio,
-            image_width,
-            samples_per_pixel,
-            max_depth,
-            image_height,
-            center,
-            pixel_00_loc,
-            pixel_delta_u,
-            pixel_delta_v,
-            samples_per_scale: 1.0 / (samples_per_pixel as f64),
-        }
-    }
 
     /// 计算一条射线的颜色。
     ///
@@ -179,14 +251,5 @@ impl Camera {
             }
         }
         eprintln!("\nDone.");
-    }
-}
-
-impl Default for Camera {
-    /// 创建一个默认的相机实例。
-    ///
-    /// 默认的相机宽高比为 16:9，图像宽度为 100 像素，每个像素采样 100 次。
-    fn default() -> Self {
-        Self::new(16.0 / 9.0, 100, 100, 10)
     }
 }

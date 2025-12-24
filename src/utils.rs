@@ -29,3 +29,9 @@ pub fn linear_to_gamma(linear_component: f64) -> f64 {
         0.0
     }
 }
+
+// 将角度转换为弧度
+#[inline]
+pub fn degrees_to_radians(degrees: f64) -> f64 {
+    degrees * std::f64::consts::PI / 180.0
+}
