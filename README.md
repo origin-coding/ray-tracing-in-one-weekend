@@ -57,6 +57,33 @@
 
     生成的 `image.ppm` 可以使用支持 PPM 格式的查看器打开，或者使用在线工具转换为 PNG/JPG。
 
+### ⚙️ 并发控制（防止系统卡顿）
+
+默认情况下，程序会使用所有可用的 CPU 核心（100% 占用）。如果在开发过程中发现电脑变慢或 IDE 卡顿，可以通过设置环境变量 `RAYON_NUM_THREADS` 来限制并发线程数（例如限制为 4 个线程）。
+
+不同操作系统的设置方法如下：
+
+**Linux / macOS (Bash/Zsh)**
+
+```bash
+# 在命令前直接添加环境变量
+RAYON_NUM_THREADS=4 cargo run --release > image.ppm
+```
+**Windows (PowerShell)**
+
+```powershell
+# 设置环境变量并运行
+$env:RAYON_NUM_THREADS=4; cargo run --release > image.ppm
+```
+Windows (CMD)
+
+
+```cmd
+:: 设置环境变量并运行
+set RAYON_NUM_THREADS=4 && cargo run --release > image.ppm
+```
+
+
 ## 📚 参考资料
 
 本项目的所有理论基础和算法逻辑均来自以下教程：

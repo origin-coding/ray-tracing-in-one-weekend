@@ -1,5 +1,5 @@
-use rand::distr::Distribution;
 use rand::distr::weighted::WeightedIndex;
+use rand::distr::Distribution;
 use ray_tracing_in_one_weekend::camera::CameraBuilder;
 use ray_tracing_in_one_weekend::hittable_list::HittableList;
 use ray_tracing_in_one_weekend::material::{Dielectric, Lambertian, Material, Metal};
@@ -7,7 +7,7 @@ use ray_tracing_in_one_weekend::ray::Point3;
 use ray_tracing_in_one_weekend::sphere::Sphere;
 use ray_tracing_in_one_weekend::utils::{random_double, random_double_range};
 use ray_tracing_in_one_weekend::{Color, Vec3};
-use std::rc::Rc;
+use std::sync::Arc;
 
 fn main() {
     let mut world = HittableList::new();
@@ -15,10 +15,10 @@ fn main() {
     // 生成随机的球体
     generate_random_balls(&mut world);
 
-    let material_ground = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    let material_first = Rc::new(Dielectric::new(1.5));
-    let material_second = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
-    let material_third = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+    let material_ground = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let material_first = Arc::new(Dielectric::new(1.5));
+    let material_second = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let material_third = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
 
     world.add(Box::new(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
@@ -60,20 +60,20 @@ fn main() {
 /// 生成一些随机的球体
 fn generate_random_balls(world: &mut HittableList) {
     // 每个闭包负责生成一种特定类型的随机材质
-    let material_generators: Vec<Box<dyn Fn() -> Rc<dyn Material>>> = vec![
+    let material_generators: Vec<Box<dyn Fn() -> Arc<dyn Material + Send + Sync>>> = vec![
         // 漫反射生成器
         Box::new(|| {
             let albedo = Color::random() * Color::random();
-            Rc::new(Lambertian::new(albedo))
+            Arc::new(Lambertian::new(albedo))
         }),
         // 金属生成器
         Box::new(|| {
             let albedo = Color::random_range(0.5, 1.0);
             let fuzz = random_double_range(0.0, 0.5);
-            Rc::new(Metal::new(albedo, fuzz))
+            Arc::new(Metal::new(albedo, fuzz))
         }),
         // 玻璃生成器
-        Box::new(|| Rc::new(Dielectric::new(1.5))),
+        Box::new(|| Arc::new(Dielectric::new(1.5))),
     ];
 
     let weights = [85, 15, 5];

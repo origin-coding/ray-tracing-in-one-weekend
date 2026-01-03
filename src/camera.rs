@@ -1,11 +1,14 @@
 //! 相机和Builder的定义以及相关工具方法。
 
+use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::color::{Color, write_color};
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::{Point3, Ray};
 use crate::utils::random_double_range_inclusive;
 use crate::vec3::Vec3;
+use rayon::iter::ParallelIterator;
+use rayon::prelude::IntoParallelIterator;
 
 /// 相机构建参数
 ///
@@ -260,7 +263,7 @@ impl Camera {
     /// # 参数
     ///
     /// * `world` - 场景中的可命中对象。
-    pub fn render(&self, world: &dyn Hittable) {
+    pub fn render(&self, world: &(dyn Hittable + Send + Sync)) {
         // 开始渲染
         println!(
             "{}\n{} {}\n{}",
@@ -270,22 +273,45 @@ impl Camera {
             Self::MAX_COLOR_VALUE
         );
 
-        let mut stdout = std::io::stdout();
+        // 使用 AtomicUsize 跨线程安全地跟踪进度
+        let rows_remaining = AtomicUsize::new(self.image_height as usize);
 
-        for y in 0..self.image_height {
-            eprint!("\rScan lines remaining: {:>3}", self.image_height - y);
-            for x in 0..self.image_width {
-                // 生成多条射线，对得到的颜色取平均值
-                let mut color = Color::zero();
-                for _ in 0..self.samples_per_pixel {
-                    let ray = self.get_ray(x, y);
-                    color += self.ray_color(ray, world, self.max_depth);
+        // 1. 并行计算阶段
+        // 使用 map 而不是 for_each，这样我们会得到一个包含所有像素数据的 Vec<Vec<Color>>
+        // Rayon 的 collect 会自动保证结果的顺序与输入范围 (0..height) 的顺序一致
+        let scan_lines: Vec<Vec<Color>> = (0..self.image_height)
+            .into_par_iter()
+            .map(|y| {
+                // 进度条逻辑
+                let remaining = rows_remaining.fetch_sub(1, Ordering::Relaxed);
+                if remaining % 10 == 0 {
+                    eprint!("\rScanlines remaining: {:>3} ", remaining);
                 }
-                color *= self.samples_per_scale;
 
+                let mut row = Vec::with_capacity(self.image_width as usize);
+                for x in 0..self.image_width {
+                    // 生成多条射线，对得到的颜色取平均值
+                    let mut color = Color::zero();
+                    for _ in 0..self.samples_per_pixel {
+                        let ray = self.get_ray(x, y);
+                        color += self.ray_color(ray, world, self.max_depth);
+                    }
+                    color *= self.samples_per_scale;
+                    row.push(color);
+                }
+                row // 返回这一行的数据
+            })
+            .collect(); // 收集所有行
+
+        // 2. 串行输出阶段
+        // 现在我们回到了主线程，可以安全地拿 stdout 的可变引用了
+        let mut stdout = std::io::stdout();
+        for row in scan_lines {
+            for color in row {
                 write_color(&mut stdout, color).expect("Failed to write color to stdout");
             }
         }
+
         eprintln!("\nDone.");
     }
 }

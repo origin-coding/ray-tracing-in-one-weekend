@@ -5,18 +5,18 @@ use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::{Point3, Ray};
 use crate::vec3::Vec3;
-use std::rc::Rc;
+use std::sync::Arc;
 
 /// 球体类型定义，包含球心和半径。
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material + Send + Sync>,
 }
 
 impl Sphere {
     /// 创建一个新的球体实例。
-    pub fn new(center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+    pub fn new(center: Point3, radius: f64, mat: Arc<dyn Material + Send + Sync>) -> Self {
         // 防止半径为负数
         let radius = if radius < 0.0 { 0.0 } else { radius };
         Self {

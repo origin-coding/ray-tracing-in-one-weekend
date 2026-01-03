@@ -4,7 +4,7 @@ use crate::ray::Ray;
 
 pub struct HittableList {
     /// 物体列表
-    pub objects: Vec<Box<dyn Hittable>>,
+    pub objects: Vec<Box<dyn Hittable + Send + Sync>>,
 }
 
 impl HittableList {
@@ -16,7 +16,7 @@ impl HittableList {
     }
 
     /// 添加一个物体到列表中
-    pub fn add(&mut self, object: Box<dyn Hittable>) {
+    pub fn add(&mut self, object: Box<dyn Hittable + Send + Sync>) {
         self.objects.push(object);
     }
 
