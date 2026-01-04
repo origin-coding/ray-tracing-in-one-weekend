@@ -10,6 +10,8 @@ pub mod sphere;
 pub mod utils;
 pub mod vec3;
 pub mod material;
+pub mod aabb;
+pub mod bvh_node;
 
 pub use color::Color;
 pub use ray::{Point3, Ray};

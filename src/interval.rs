@@ -1,6 +1,7 @@
 //! 时间区间的类型定义、相关常量和方法。
 
 /// 时间区间的类型定义，包含一个最小时间和一个最大时间。
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Interval {
     pub min: f64,
     pub max: f64,
@@ -25,6 +26,15 @@ impl Interval {
         Self { min, max }
     }
 
+    /// 创建一个时间区间，包含给定的两个区间。
+    #[inline]
+    pub fn enclosing(i1: Self, i2: Self) -> Self {
+        Self {
+            min: i1.min.min(i2.min),
+            max: i1.max.max(i2.max),
+        }
+    }
+
     /// 判断一个时间点是否被区间所包含（包含边界）。
     #[inline]
     pub fn contains(&self, x: f64) -> bool {
@@ -47,6 +57,16 @@ impl Interval {
             return self.max;
         }
         x
+    }
+
+    /// 扩展时间范围
+    #[inline]
+    pub fn expand(&self, delta: f64) -> Self {
+        let padding = delta / 2.0;
+        Self {
+            min: self.min - padding,
+            max: self.max + padding,
+        }
     }
 }
 

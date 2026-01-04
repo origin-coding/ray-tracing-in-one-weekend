@@ -1,5 +1,6 @@
-use rand::distr::weighted::WeightedIndex;
 use rand::distr::Distribution;
+use rand::distr::weighted::WeightedIndex;
+use ray_tracing_in_one_weekend::bvh_node::BvhNode;
 use ray_tracing_in_one_weekend::camera::CameraBuilder;
 use ray_tracing_in_one_weekend::hittable_list::HittableList;
 use ray_tracing_in_one_weekend::material::{Dielectric, Lambertian, Material, Metal};
@@ -41,6 +42,8 @@ fn main() {
         material_third.clone(),
     )));
 
+    let world = BvhNode::from_hittable_list(world);
+
     // 创建相机，渲染场景
     let camera = CameraBuilder::default()
         .aspect_ratio(16.0 / 9.0)
@@ -54,7 +57,7 @@ fn main() {
         .defocus_angle(0.06)
         .focus_dist(10.0)
         .build();
-    camera.render(&world);
+    camera.render(world.as_ref());
 }
 
 /// 生成一些随机的球体

@@ -199,8 +199,8 @@ impl Camera {
         }
 
         // 如果命中了物体，那么计算物体颜色
-        if let Some(rec) = world.hit(r, Interval::new(0.001, f64::INFINITY)) {
-            return if let Some((albedo, scattered)) = rec.mat.scatter(r, &rec) {
+        if let Some(rec) = world.hit(&r, Interval::new(0.001, f64::INFINITY)) {
+            return if let Some((albedo, scattered)) = rec.mat.scatter(&r, &rec) {
                 albedo * self.ray_color(scattered, world, depth - 1)
             } else {
                 Color::zero()
@@ -287,7 +287,7 @@ impl Camera {
                 // 进度条逻辑
                 let remaining = rows_remaining.fetch_sub(1, Ordering::Relaxed);
                 if remaining % 10 == 0 {
-                    eprint!("\rScanlines remaining: {:>3} ", remaining);
+                    eprint!("\rScan lines remaining: {:>3}", remaining);
                 }
 
                 let mut row = Vec::with_capacity(self.image_width as usize);

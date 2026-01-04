@@ -16,7 +16,7 @@ pub trait Material {
     /// # 返回值
     ///
     /// 如果散射成功，返回散射后的颜色和光线；否则返回 None。
-    fn scatter(&self, r_in: Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)>;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)>;
 }
 
 /// 朗伯材质
@@ -34,7 +34,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
         let scatter_direction = rec.normal + Vec3::random_unit();
         let scatter_direction = if scatter_direction.near_zero() {
             rec.normal
@@ -64,7 +64,7 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
         let reflected = r_in.direction.reflect(rec.normal);
         let scattered = Ray::new_with_time(rec.p, reflected + self.fuzz * Vec3::random_unit(), r_in.time);
         if scattered.direction.dot(rec.normal) > 0.0 {
@@ -98,7 +98,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
         let attenuation = Color::one();
         let ri = if rec.front_face {
             1.0 / self.refraction_index
