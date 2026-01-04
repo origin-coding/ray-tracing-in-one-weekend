@@ -9,19 +9,32 @@ use std::sync::Arc;
 
 /// 球体类型定义，包含球心和半径。
 pub struct Sphere {
-    pub center: Point3,
+    pub center: Ray,
     pub radius: f64,
     pub mat: Arc<dyn Material + Send + Sync>,
 }
 
 impl Sphere {
-    /// 创建一个新的球体实例。
-    pub fn new(center: Point3, radius: f64, mat: Arc<dyn Material + Send + Sync>) -> Self {
+    /// 创建一个静止的球体实例。
+    pub fn stationary(center: Point3, radius: f64, mat: Arc<dyn Material + Send + Sync>) -> Self {
         // 防止半径为负数
-        let radius = if radius < 0.0 { 0.0 } else { radius };
         Self {
-            center,
-            radius,
+            center: Ray::new(center, Vec3::zero()),
+            radius: if radius < 0.0 { 0.0 } else { radius },
+            mat,
+        }
+    }
+
+    /// 创建一个移动的球体实例
+    pub fn moving(
+        center_start: Point3,
+        center_end: Point3,
+        radius: f64,
+        mat: Arc<dyn Material + Send + Sync>,
+    ) -> Self {
+        Self {
+            center: Ray::new(center_start, center_end - center_start),
+            radius: if radius < 0.0 { 0.0 } else { radius },
             mat,
         }
     }
@@ -29,8 +42,10 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, r: Ray, interval: Interval) -> Option<HitRecord<'_>> {
+        // 计算当前球体的位置
+        let current_center = self.center.at(r.time);
         // 首先计算判别式，并在没有解的情况下直接返回 None
-        let oc = self.center - r.origin;
+        let oc = current_center - r.origin;
         let a = r.direction.length_squared();
         let h = Vec3::dot(r.direction, oc);
         let c = oc.length_squared() - self.radius * self.radius;
@@ -50,7 +65,7 @@ impl Hittable for Sphere {
 
         // 有解，并且在 t_min 和 t_max 之间，计算 HitRecord
         let point = r.at(root);
-        let outward_normal = (point - self.center) / self.radius;
+        let outward_normal = (point - current_center) / self.radius;
         Some(HitRecord::new(
             point,
             outward_normal,

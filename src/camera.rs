@@ -5,7 +5,7 @@ use crate::color::{Color, write_color};
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::{Point3, Ray};
-use crate::utils::random_double_range_inclusive;
+use crate::utils::{random_double, random_double_range_inclusive};
 use crate::vec3::Vec3;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
@@ -236,7 +236,9 @@ impl Camera {
             self.defocus_disk_sample()
         };
 
-        Ray::new(ray_origin, ray_direction)
+        let ray_time = random_double();
+
+        Ray::new_with_time(ray_origin, ray_direction, ray_time)
     }
 
     /// 生成一个随机偏移量，用于抗锯齿。

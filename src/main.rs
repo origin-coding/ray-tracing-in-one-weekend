@@ -20,22 +20,22 @@ fn main() {
     let material_second = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
     let material_third = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
 
-    world.add(Box::new(Sphere::new(
+    world.add(Box::new(Sphere::stationary(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
         material_ground,
     )));
-    world.add(Box::new(Sphere::new(
+    world.add(Box::new(Sphere::stationary(
         Point3::new(0.0, 1.0, 0.0),
         1.0,
         material_first.clone(),
     )));
-    world.add(Box::new(Sphere::new(
+    world.add(Box::new(Sphere::stationary(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
         material_second.clone(),
     )));
-    world.add(Box::new(Sphere::new(
+    world.add(Box::new(Sphere::stationary(
         Point3::new(4.0, 1.0, 0.0),
         1.0,
         material_third.clone(),
@@ -91,7 +91,12 @@ fn generate_random_balls(world: &mut HittableList) {
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 let generator_index = dist.sample(&mut rng);
                 let material = material_generators[generator_index]();
-                world.add(Box::new(Sphere::new(center, 0.2, material)));
+                if generator_index == 0 {
+                    let center_end = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
+                    world.add(Box::new(Sphere::moving(center, center_end, 0.2, material)));
+                } else {
+                    world.add(Box::new(Sphere::stationary(center, 0.2, material)));
+                }
             }
         }
     }
