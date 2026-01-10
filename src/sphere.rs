@@ -54,6 +54,22 @@ impl Sphere {
             material,
         }
     }
+
+    /// 计算点 p 在球体上的 UV 坐标。
+    fn get_sphere_uv(p: Vec3) -> (f64, f64) {
+        // p.y 是 -1 到 1。acos(-p.y) 算出从 0 (南极) 到 PI (北极) 的角度
+        // 注意：这里是否取负号取决于你的纹理图片上下方向是否颠倒，通常图形学中 v=0 在底部。
+        let theta = (-p.y).acos();
+
+        // atan2(-z, x) 算出绕 Y 轴的角度，范围是 -PI 到 PI
+        // +PI 是为了把范围移到 0 到 2PI
+        let phi = (-p.z).atan2(p.x) + std::f64::consts::PI;
+
+        let u = phi / (2.0 * std::f64::consts::PI);
+        let v = theta / std::f64::consts::PI;
+
+        (u, v)
+    }
 }
 
 impl Hittable for Sphere {
@@ -86,6 +102,7 @@ impl Hittable for Sphere {
             point,
             outward_normal,
             root,
+            Sphere::get_sphere_uv(outward_normal),
             r,
             self.material.as_ref(),
         ))

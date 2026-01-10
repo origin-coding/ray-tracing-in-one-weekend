@@ -1,8 +1,10 @@
 //! 材质定义以及相关工具方法。
 
 use crate::hittable::HitRecord;
-use crate::{Color, Ray, Vec3};
+use crate::texture::{SolidColor, Texture};
 use crate::utils::random_double;
+use crate::{Color, Ray, Vec3};
+use std::sync::Arc;
 
 /// 材质定义
 pub trait Material {
@@ -23,13 +25,18 @@ pub trait Material {
 ///
 /// 朗伯材质是一种基于反射率的材质，它的反射率与入射光线的角度无关。
 pub struct Lambertian {
-    pub albedo: Color,
+    pub texture: Arc<dyn Texture + Send + Sync>,
 }
 
 impl Lambertian {
     /// 创建一个新的朗伯材质实例。
-    pub fn new(albedo: Color) -> Self {
-        Self { albedo }
+    pub fn new(texture: Arc<dyn Texture + Send + Sync>) -> Self {
+        Self { texture }
+    }
+
+    /// 通过颜色创建朗伯材质
+    pub fn from_color(albedo: Color) -> Self {
+        Self::new(Arc::new(SolidColor::new(albedo)))
     }
 }
 
@@ -43,7 +50,8 @@ impl Material for Lambertian {
         };
 
         let scattered = Ray::new_with_time(rec.p, scatter_direction, r_in.time);
-        Some((self.albedo, scattered))
+        let attenuation = self.texture.value(rec.uv, &rec.p);
+        Some((attenuation, scattered))
     }
 }
 

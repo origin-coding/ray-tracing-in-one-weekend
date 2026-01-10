@@ -7,7 +7,6 @@ use crate::ray::{Point3, Ray};
 use crate::vec3::Vec3;
 
 /// 碰撞记录
-#[allow(dead_code)]
 pub struct HitRecord<'a> {
     /// 碰撞点
     pub p: Point3,
@@ -19,6 +18,8 @@ pub struct HitRecord<'a> {
     pub front_face: bool,
     /// 碰撞时的材质
     pub mat: &'a dyn Material,
+    /// 碰撞点对应的纹理坐标
+    pub uv: (f64, f64),
 }
 
 impl<'a> HitRecord<'a> {
@@ -30,7 +31,7 @@ impl<'a> HitRecord<'a> {
     /// * `output_normal` - 物体的几何法线（始终指向外），要求是单位向量
     /// * `t` - 碰撞时间
     /// * `ray` - 碰撞时的光线
-    pub fn new(p: Point3, output_normal: Vec3, t: f64, ray: &Ray, mat: &'a dyn Material) -> Self {
+        pub fn new(p: Point3, output_normal: Vec3, t: f64, uv: (f64, f64), ray: &Ray, mat: &'a dyn Material) -> Self {
         let front_face = ray.direction.dot(output_normal) < 0.0;
         // 在 front_face 为 false 时，翻转法线向量，存储最终的法线向量
         let normal = if front_face {
@@ -45,6 +46,7 @@ impl<'a> HitRecord<'a> {
             t,
             front_face,
             mat,
+            uv,
         }
     }
 }

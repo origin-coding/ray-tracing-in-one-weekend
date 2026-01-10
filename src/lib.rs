@@ -1,17 +1,18 @@
 //! 项目跟模块，包含常用的模块和导出类型。
 
+pub mod aabb;
+pub mod bvh_node;
 pub mod camera;
 pub mod color;
 pub mod hittable;
 pub mod hittable_list;
 pub mod interval;
+pub mod material;
 pub mod ray;
 pub mod sphere;
+pub mod texture;
 pub mod utils;
 pub mod vec3;
-pub mod material;
-pub mod aabb;
-pub mod bvh_node;
 
 pub use color::Color;
 pub use ray::{Point3, Ray};

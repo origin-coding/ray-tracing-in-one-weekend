@@ -9,6 +9,7 @@ use ray_tracing_in_one_weekend::sphere::Sphere;
 use ray_tracing_in_one_weekend::utils::{random_double, random_double_range};
 use ray_tracing_in_one_weekend::{Color, Vec3};
 use std::sync::Arc;
+use ray_tracing_in_one_weekend::texture::CheckerTexture;
 
 fn main() {
     let mut world = HittableList::new();
@@ -16,9 +17,10 @@ fn main() {
     // 生成随机的球体
     generate_random_balls(&mut world);
 
-    let material_ground = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let texture_ground = CheckerTexture::from_color(Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9), 0.32);
+    let material_ground = Arc::new(Lambertian::new(Arc::new(texture_ground)));
     let material_first = Arc::new(Dielectric::new(1.5));
-    let material_second = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let material_second = Arc::new(Lambertian::from_color(Color::new(0.4, 0.2, 0.1)));
     let material_third = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
 
     world.add(Box::new(Sphere::stationary(
@@ -67,7 +69,7 @@ fn generate_random_balls(world: &mut HittableList) {
         // 漫反射生成器
         Box::new(|| {
             let albedo = Color::random() * Color::random();
-            Arc::new(Lambertian::new(albedo))
+            Arc::new(Lambertian::from_color(albedo))
         }),
         // 金属生成器
         Box::new(|| {
