@@ -1,15 +1,12 @@
 use rand::distr::Distribution;
 use rand::distr::weighted::WeightedIndex;
-use ray_tracing_in_one_weekend::bvh_node::BvhNode;
 use ray_tracing_in_one_weekend::camera::CameraBuilder;
-use ray_tracing_in_one_weekend::hittable_list::HittableList;
 use ray_tracing_in_one_weekend::material::{Dielectric, Lambertian, Material, Metal};
-use ray_tracing_in_one_weekend::ray::Point3;
-use ray_tracing_in_one_weekend::sphere::Sphere;
 use ray_tracing_in_one_weekend::utils::{random_double, random_double_range};
-use ray_tracing_in_one_weekend::{Color, Vec3};
 use std::sync::Arc;
-use ray_tracing_in_one_weekend::texture::CheckerTexture;
+use ray_tracing_in_one_weekend::material::Checker;
+use ray_tracing_in_one_weekend::math::{Color, Point3, Vec3};
+use ray_tracing_in_one_weekend::geometry::{Sphere, HittableList, BvhNode};
 
 fn main() {
     let mut world = HittableList::new();
@@ -17,7 +14,7 @@ fn main() {
     // 生成随机的球体
     generate_random_balls(&mut world);
 
-    let texture_ground = CheckerTexture::from_color(Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9), 0.32);
+    let texture_ground = Checker::from_color(Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9), 0.32);
     let material_ground = Arc::new(Lambertian::new(Arc::new(texture_ground)));
     let material_first = Arc::new(Dielectric::new(1.5));
     let material_second = Arc::new(Lambertian::from_color(Color::new(0.4, 0.2, 0.1)));

@@ -1,14 +1,11 @@
 //! 相机和Builder的定义以及相关工具方法。
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-use crate::color::{Color, write_color};
-use crate::hittable::Hittable;
-use crate::interval::Interval;
-use crate::ray::{Point3, Ray};
+use crate::geometry::Hittable;
+use crate::math::{color::write_color, Color, Interval, Point3, Ray, Vec3};
 use crate::utils::{random_double, random_double_range_inclusive};
-use crate::vec3::Vec3;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// 相机构建参数
 ///

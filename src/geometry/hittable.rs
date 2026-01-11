@@ -1,10 +1,8 @@
 //! 光线与物体碰撞检测相关逻辑，包含碰撞记录、Hittable Trait。
 
-use crate::aabb::Aabb;
-use crate::interval::Interval;
+use crate::geometry::Aabb;
 use crate::material::Material;
-use crate::ray::{Point3, Ray};
-use crate::vec3::Vec3;
+use crate::math::{Interval, Point3, Ray, Vec3};
 
 /// 碰撞记录
 pub struct HitRecord<'a> {
@@ -31,7 +29,14 @@ impl<'a> HitRecord<'a> {
     /// * `output_normal` - 物体的几何法线（始终指向外），要求是单位向量
     /// * `t` - 碰撞时间
     /// * `ray` - 碰撞时的光线
-        pub fn new(p: Point3, output_normal: Vec3, t: f64, uv: (f64, f64), ray: &Ray, mat: &'a dyn Material) -> Self {
+    pub fn new(
+        p: Point3,
+        output_normal: Vec3,
+        t: f64,
+        uv: (f64, f64),
+        ray: &Ray,
+        mat: &'a dyn Material,
+    ) -> Self {
         let front_face = ray.direction.dot(output_normal) < 0.0;
         // 在 front_face 为 false 时，翻转法线向量，存储最终的法线向量
         let normal = if front_face {

@@ -1,6 +1,6 @@
 //! 纹理的定义和实现。
 
-use crate::{Color, Point3};
+use crate::math::{Color, Point3};
 use std::sync::Arc;
 
 /// 纹理的 trait，定义了纹理的行为。
@@ -61,13 +61,13 @@ impl Texture for SolidColor {
 }
 
 /// 棋盘纹理，由两种不同的纹理交替组成。
-pub struct CheckerTexture {
+pub struct Checker {
     even: Arc<dyn Texture + Send + Sync>,
     odd: Arc<dyn Texture + Send + Sync>,
     inv_scale: f64,
 }
 
-impl CheckerTexture {
+impl Checker {
     /// 创建一个新的棋盘纹理。
     ///
     /// # Arguments
@@ -110,7 +110,7 @@ impl CheckerTexture {
     }
 }
 
-impl Texture for CheckerTexture {
+impl Texture for Checker {
     fn value(&self, uv: (f64, f64), p: &Point3) -> Color {
         let x = (self.inv_scale * p.x).floor();
         let y = (self.inv_scale * p.y).floor();

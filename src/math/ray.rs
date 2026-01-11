@@ -2,7 +2,7 @@
 
 //! 光线类型定义和相关方法。
 
-use crate::vec3::Vec3;
+use crate::math::Vec3;
 
 /// 三维空间中的点，Vec3 的一个别名。
 pub type Point3 = Vec3;
@@ -19,13 +19,21 @@ impl Ray {
     /// 创建一个新的光线实例。
     #[inline]
     pub fn new(origin: Point3, direction: Vec3) -> Self {
-        Self { origin, direction,  time: 0.0 }
+        Self {
+            origin,
+            direction,
+            time: 0.0,
+        }
     }
 
     /// 创建一个新的光线实例，包含时间参数。
     #[inline]
     pub fn new_with_time(origin: Point3, direction: Vec3, time: f64) -> Self {
-        Self { origin, direction, time }
+        Self {
+            origin,
+            direction,
+            time,
+        }
     }
 
     /// 计算光线在 t 时刻到达的位置。

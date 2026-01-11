@@ -1,7 +1,6 @@
-use crate::aabb::Aabb;
-use crate::hittable::{HitRecord, Hittable};
-use crate::interval::Interval;
-use crate::ray::Ray;
+//! 可碰撞物体列表
+use crate::geometry::{Aabb, HitRecord, Hittable};
+use crate::math::{Interval, Ray};
 
 pub struct HittableList {
     pub bounding_box: Aabb,

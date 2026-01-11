@@ -1,10 +1,7 @@
 //! BVH 节点定义。
 
-use crate::Ray;
-use crate::aabb::Aabb;
-use crate::hittable::{HitRecord, Hittable};
-use crate::hittable_list::HittableList;
-use crate::interval::Interval;
+use crate::geometry::{Aabb, HitRecord, Hittable, HittableList};
+use crate::math::{Interval, Ray};
 use std::cmp::Ordering;
 
 pub struct BvhNode {

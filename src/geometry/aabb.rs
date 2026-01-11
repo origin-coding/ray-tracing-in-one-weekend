@@ -3,8 +3,7 @@
 //! 它的边与坐标轴平行，且不考虑物体的旋转。
 //! 它的主要作用是将场景中的物体分组，减少射线与物体的交点计算次数。
 
-use crate::interval::Interval;
-use crate::{Point3, Ray};
+use crate::math::{Interval, Point3, Ray};
 
 #[derive(Copy, Clone)]
 pub struct Aabb {

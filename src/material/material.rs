@@ -1,9 +1,10 @@
 //! 材质定义以及相关工具方法。
 
-use crate::hittable::HitRecord;
-use crate::texture::{SolidColor, Texture};
+
+use crate::math::{Color, Ray, Vec3};
+use crate::geometry::HitRecord;
+use crate::material::{SolidColor, Texture};
 use crate::utils::random_double;
-use crate::{Color, Ray, Vec3};
 use std::sync::Arc;
 
 /// 材质定义

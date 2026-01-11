@@ -1,11 +1,8 @@
 //! 球体类型的定义，以及它的光线碰撞检测逻辑。
 
-use crate::aabb::Aabb;
-use crate::hittable::{HitRecord, Hittable};
-use crate::interval::Interval;
+use crate::geometry::{Aabb, HitRecord, Hittable};
 use crate::material::Material;
-use crate::ray::{Point3, Ray};
-use crate::vec3::Vec3;
+use crate::math::{Interval, Point3, Ray, Vec3};
 use std::sync::Arc;
 
 /// 球体类型定义，包含球心和半径。
