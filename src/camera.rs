@@ -5,6 +5,7 @@ use crate::math::{color::write_color, Color, Interval, Point3, Ray, Vec3};
 use crate::utils::{random_double, random_double_range_inclusive};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
+use std::io::Write;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// 相机构建参数
@@ -262,15 +263,17 @@ impl Camera {
     /// # 参数
     ///
     /// * `world` - 场景中的可命中对象。
-    pub fn render(&self, world: &(dyn Hittable + Send + Sync)) {
+    pub fn render(&self, world: &(dyn Hittable + Send + Sync), out: &mut impl Write) {
         // 开始渲染
-        println!(
+        writeln!(
+            out,
             "{}\n{} {}\n{}",
             Self::P3_MAGIC_NUMBER,
             self.image_width,
             self.image_height,
             Self::MAX_COLOR_VALUE
-        );
+        )
+        .expect("Failed to write PPM header");
 
         // 使用 AtomicUsize 跨线程安全地跟踪进度
         let rows_remaining = AtomicUsize::new(self.image_height as usize);
@@ -303,11 +306,9 @@ impl Camera {
             .collect(); // 收集所有行
 
         // 2. 串行输出阶段
-        // 现在我们回到了主线程，可以安全地拿 stdout 的可变引用了
-        let mut stdout = std::io::stdout();
         for row in scan_lines {
             for color in row {
-                write_color(&mut stdout, color).expect("Failed to write color to stdout");
+                write_color(out, color).expect("Failed to write color to stdout");
             }
         }
 
