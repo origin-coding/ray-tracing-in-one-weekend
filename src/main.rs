@@ -1,8 +1,9 @@
-use rand::distr::weighted::WeightedIndex;
 use rand::distr::Distribution;
+use rand::distr::weighted::WeightedIndex;
 use ray_tracing_in_one_weekend::camera::CameraBuilder;
 use ray_tracing_in_one_weekend::config::{CameraConfig, Config, SceneType};
 use ray_tracing_in_one_weekend::geometry::{BvhNode, HittableList, Sphere};
+use ray_tracing_in_one_weekend::material::texture::NoiseTexture;
 use ray_tracing_in_one_weekend::material::{Checker, ImageTexture};
 use ray_tracing_in_one_weekend::material::{Dielectric, Lambertian, Material, Metal};
 use ray_tracing_in_one_weekend::math::{Color, Point3, Vec3};
@@ -23,6 +24,7 @@ fn main() {
         SceneType::Bouncing => scene_bouncing(),
         SceneType::Checkered => scene_checkered(),
         SceneType::Earth => scene_earth(scene_config.image_texture_path.as_deref()),
+        SceneType::Perlin => scene_perlin(),
     };
     let world = BvhNode::from_hittable_list(world);
 
@@ -198,6 +200,38 @@ fn scene_earth(path: Option<&Path>) -> (HittableList, CameraConfig) {
         look_at: Point3::new(0.0, 0.0, 0.0),
         vfov: 20.0,
         defocus_angle: 0.0, // 清晰的地球
+        ..Default::default()
+    };
+
+    (world, config)
+}
+
+/// 生成柏林噪声纹理场景。
+fn scene_perlin() -> (HittableList, CameraConfig) {
+    let mut world = HittableList::new();
+
+    let ground_texture = Arc::new(NoiseTexture::new(4.0));
+    let ground_material = Arc::new(Lambertian::new(ground_texture));
+    let small_sphere_texture = Arc::new(NoiseTexture::new(2.0));
+    let small_sphere_material = Arc::new(Lambertian::new(small_sphere_texture));
+
+    world.add(Box::new(Sphere::stationary(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        ground_material,
+    )));
+    world.add(Box::new(Sphere::stationary(
+        Point3::new(0.0, 1.0, 0.0),
+        1.0,
+        small_sphere_material,
+    )));
+
+    let config = CameraConfig {
+        look_from: Point3::new(13.0, 2.0, 3.0),
+        look_at: Point3::new(0.0, 0.0, 0.0),
+        vfov: 20.0,
+        defocus_angle: 0.06,
+        focus_dist: 10.0,
         ..Default::default()
     };
 

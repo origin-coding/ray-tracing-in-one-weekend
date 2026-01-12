@@ -53,12 +53,14 @@ pub struct RenderConfig {
 /// 渲染场景选项，包含跳跃小球，点格球和一个地球。
 #[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
 pub enum SceneType {
-    /// 随机生成的弹跳小球场景 (对应 Chapter 1)
+    /// 随机生成的弹跳小球场景 (对应 Chapter 2)
     Bouncing,
-    /// 棋盘格纹理场景 (对应 Chapter 2)
+    /// 棋盘格纹理场景 (对应 Chapter 3)
     Checkered,
-    /// 地球纹理场景 (对应 Chapter 3)
+    /// 地球纹理场景 (对应 Chapter 4)
     Earth,
+    /// 柏林噪声纹理场景 (对应 Chapter 5)
+    Perlin,
 }
 
 /// 场景配置，包含一个可选的图像纹理路径。
