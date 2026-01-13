@@ -68,6 +68,12 @@ impl Interval {
             max: self.max + padding,
         }
     }
+
+    /// 返回时间区间的大小（宽度）。
+    #[inline]
+    pub fn size(&self) -> f64 {
+        self.max - self.min
+    }
 }
 
 impl Default for Interval {

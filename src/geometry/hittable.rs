@@ -28,6 +28,7 @@ impl<'a> HitRecord<'a> {
     /// * `p` - 碰撞点
     /// * `output_normal` - 物体的几何法线（始终指向外），要求是单位向量
     /// * `t` - 碰撞时间
+    /// * `uv` - 碰撞点对应的纹理坐标
     /// * `ray` - 碰撞时的光线
     pub fn new(
         p: Point3,

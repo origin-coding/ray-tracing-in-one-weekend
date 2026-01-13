@@ -13,6 +13,8 @@ pub struct Aabb {
 }
 
 impl Aabb {
+    const DELTA: f64 = 0.0001;
+
     /// 创建一个新的轴对齐边界框。
     #[inline]
     pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
@@ -28,16 +30,19 @@ impl Aabb {
     /// 创建一个由两个点定义的轴对齐边界框。
     #[inline]
     pub fn from_two_points(a: Point3, b: Point3) -> Self {
-        Self {
+        let mut aabb = Self {
             x: Interval::new(a.x.min(b.x), a.x.max(b.x)),
             y: Interval::new(a.y.min(b.y), a.y.max(b.y)),
             z: Interval::new(a.z.min(b.z), a.z.max(b.z)),
-        }
+        };
+        aabb.pad_if_needed();
+        aabb
     }
 
     /// 创建一个包含两个 Aabb 的新 Aabb。
     #[inline]
     pub fn surrounding(a: Self, b: Self) -> Self {
+        // 在构建原始 Aabb 时已经按需扩展了一次，这里无需再扩展
         Self {
             x: Interval::enclosing(a.x, b.x),
             y: Interval::enclosing(a.y, b.y),
@@ -88,5 +93,18 @@ impl Aabb {
         }
 
         true
+    }
+
+    /// 如果边界框的任何轴的大小小于 DELTA，则扩展该轴。
+    fn pad_if_needed(&mut self) {
+        if self.x.size() < Self::DELTA {
+            self.x = self.x.expand(Self::DELTA);
+        }
+        if self.y.size() < Self::DELTA {
+            self.y = self.y.expand(Self::DELTA);
+        }
+        if self.z.size() < Self::DELTA {
+            self.z = self.z.expand(Self::DELTA);
+        }
     }
 }

@@ -61,6 +61,8 @@ pub enum SceneType {
     Earth,
     /// 柏林噪声纹理场景 (对应 Chapter 5)
     Perlin,
+    /// 四边形场景 (对应 Chapter 6)
+    Quad,
 }
 
 /// 场景配置，包含一个可选的图像纹理路径。
