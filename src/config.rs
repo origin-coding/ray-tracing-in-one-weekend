@@ -1,6 +1,6 @@
+use crate::math::{Color, Point3, Vec3};
 use clap::{Args, Parser, ValueEnum};
 use std::path::PathBuf;
-use crate::math::{Point3, Vec3};
 
 /// 全局配置项，包含渲染配置和场景配置。
 #[derive(Parser, Debug, Clone)]
@@ -63,6 +63,10 @@ pub enum SceneType {
     Perlin,
     /// 四边形场景 (对应 Chapter 6)
     Quad,
+    /// 光照场景 (对应 Chapter 7)
+    Light,
+    /// Cornell Box 场景 (对应 Chapter 7)
+    CornellBox,
 }
 
 /// 场景配置，包含一个可选的图像纹理路径。
@@ -103,6 +107,7 @@ pub struct CameraConfig {
     pub up: Vec3,
     pub defocus_angle: f64,
     pub focus_dist: f64,
+    pub background_color: Color,
 }
 
 impl Default for CameraConfig {
@@ -114,6 +119,7 @@ impl Default for CameraConfig {
             up: Vec3::new(0.0, 1.0, 0.0),
             defocus_angle: 0.0,
             focus_dist: 10.0,
+            background_color: Color::zero(),
         }
     }
 }

@@ -1,8 +1,9 @@
-use rand::distr::weighted::WeightedIndex;
 use rand::distr::Distribution;
+use rand::distr::weighted::WeightedIndex;
 use ray_tracing_in_one_weekend::camera::CameraBuilder;
 use ray_tracing_in_one_weekend::config::{CameraConfig, Config, SceneType};
 use ray_tracing_in_one_weekend::geometry::{BvhNode, HittableList, Quadrilateral, Sphere};
+use ray_tracing_in_one_weekend::material::material::DiffuseLight;
 use ray_tracing_in_one_weekend::material::texture::NoiseTexture;
 use ray_tracing_in_one_weekend::material::{Checker, ImageTexture};
 use ray_tracing_in_one_weekend::material::{Dielectric, Lambertian, Material, Metal};
@@ -26,6 +27,8 @@ fn main() {
         SceneType::Earth => scene_earth(scene_config.image_texture_path.as_deref()),
         SceneType::Perlin => scene_perlin(),
         SceneType::Quad => scene_quadrilateral(),
+        SceneType::Light => scene_light(),
+        SceneType::CornellBox => scene_cornell_box(),
     };
     let world = BvhNode::from_hittable_list(world);
 
@@ -45,12 +48,14 @@ fn main() {
         .up(camera_config.up)
         .defocus_angle(camera_config.defocus_angle)
         .focus_dist(camera_config.focus_dist)
+        .background_color(camera_config.background_color)
         .build();
     camera.render(world.as_ref(), &mut buffer);
 }
 
 // 不同场景的生成函数
 
+//noinspection DuplicatedCode
 /// 生成随机弹跳小球场景。
 
 fn scene_bouncing() -> (HittableList, CameraConfig) {
@@ -61,9 +66,8 @@ fn scene_bouncing() -> (HittableList, CameraConfig) {
     let config = CameraConfig {
         look_from: Point3::new(13.0, 2.0, 3.0),
         look_at: Point3::new(0.0, 0.0, 0.0),
-        vfov: 20.0,
         defocus_angle: 0.06,
-        focus_dist: 10.0,
+        background_color: Color::new(0.7, 0.8, 1.0),
         ..Default::default()
     };
 
@@ -172,7 +176,7 @@ fn scene_checkered() -> (HittableList, CameraConfig) {
         look_at: Point3::new(0.0, 0.0, 0.0),
         vfov: 20.0,
         defocus_angle: 0.06,
-        focus_dist: 10.0,
+        background_color: Color::new(0.7, 0.8, 1.0),
         ..Default::default()
     };
 
@@ -199,14 +203,15 @@ fn scene_earth(path: Option<&Path>) -> (HittableList, CameraConfig) {
     let config = CameraConfig {
         look_from: Point3::new(0.0, 0.0, 12.0),
         look_at: Point3::new(0.0, 0.0, 0.0),
-        vfov: 20.0,
         defocus_angle: 0.0, // 清晰的地球
+        background_color: Color::new(0.7, 0.8, 1.0),
         ..Default::default()
     };
 
     (world, config)
 }
 
+//noinspection DuplicatedCode
 /// 生成柏林噪声纹理场景。
 fn scene_perlin() -> (HittableList, CameraConfig) {
     let mut world = HittableList::new();
@@ -230,9 +235,8 @@ fn scene_perlin() -> (HittableList, CameraConfig) {
     let config = CameraConfig {
         look_from: Point3::new(13.0, 2.0, 3.0),
         look_at: Point3::new(0.0, 0.0, 0.0),
-        vfov: 20.0,
         defocus_angle: 0.06,
-        focus_dist: 10.0,
+        background_color: Color::new(0.7, 0.8, 1.0),
         ..Default::default()
     };
 
@@ -284,7 +288,112 @@ fn scene_quadrilateral() -> (HittableList, CameraConfig) {
         look_from: Point3::new(0.0, 0.0, 9.0),
         look_at: Point3::new(0.0, 0.0, 0.0),
         vfov: 80.0,
+        background_color: Color::new(0.7, 0.8, 1.0),
+        ..Default::default()
+    };
+
+    (world, camera_config)
+}
+
+/// 简单光照场景
+fn scene_light() -> (HittableList, CameraConfig) {
+    let mut world = HittableList::new();
+
+    let per_text = Arc::new(NoiseTexture::new(4.0));
+    let per_material = Arc::new(Lambertian::new(per_text));
+
+    world.add(Box::new(Sphere::stationary(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        per_material.clone(),
+    )));
+    world.add(Box::new(Sphere::stationary(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        per_material.clone(),
+    )));
+
+    let light_material = Arc::new(DiffuseLight::from_color(Color::new(4.0, 4.0, 4.0)));
+    world.add(Box::new(Sphere::stationary(
+        Point3::new(0.0, 7.0, 0.0),
+        2.0,
+        light_material.clone(),
+    )));
+    world.add(Box::new(Quadrilateral::new(
+        Point3::new(3.0, 1.0, -2.0),
+        Vec3::new(2.0, 0.0, 0.0),
+        Vec3::new(0.0, 2.0, 0.0),
+        light_material.clone(),
+    )));
+
+    let camera_config = CameraConfig {
+        vfov: 20.0,
+        look_from: Point3::new(26.0, 3.0, 6.0),
+        look_at: Point3::new(0.0, 2.0, 0.0),
+        up: Vec3::new(0.0, 1.0, 0.0),
         defocus_angle: 0.0,
+        background_color: Color::zero(),
+        ..Default::default()
+    };
+
+    (world, camera_config)
+}
+
+///  Cornell Box 场景
+fn scene_cornell_box() -> (HittableList, CameraConfig) {
+    let mut world = HittableList::new();
+
+    let material_red = Arc::new(Lambertian::from_color(Color::new(0.65, 0.05, 0.05)));
+    let material_white = Arc::new(Lambertian::from_color(Color::new(0.73, 0.73, 0.73)));
+    let material_green = Arc::new(Lambertian::from_color(Color::new(0.12, 0.45, 0.15)));
+    let material_light = Arc::new(DiffuseLight::from_color(Color::new(15.0, 15.0, 15.0)));
+
+    world.add(Box::new(Quadrilateral::new(
+        Point3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        material_red,
+    )));
+
+    world.add(Box::new(Quadrilateral::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        material_green,
+    )));
+
+    world.add(Box::new(Quadrilateral::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 555.0),
+        material_white.clone(),
+    )));
+    world.add(Box::new(Quadrilateral::new(
+        Point3::new(555.0, 555.0, 555.0),
+        Vec3::new(-555.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -555.0),
+        material_white.clone(),
+    )));
+    world.add(Box::new(Quadrilateral::new(
+        Point3::new(0.0, 0.0, 555.0),
+        Vec3::new(555.0, 0.0, 0.0),
+        Vec3::new(0.0, 555.0, 0.0),
+        material_white.clone(),
+    )));
+
+    world.add(Box::new(Quadrilateral::new(
+        Point3::new(343.0, 554.0, 332.0),
+        Vec3::new(-130.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -105.0),
+        material_light,
+    )));
+
+    // （在运行时记得设置 --aspect-ratio 1，将图片渲染为正方形）
+    let camera_config = CameraConfig {
+        look_from: Point3::new(278.0, 278.0, -800.0),
+        look_at: Point3::new(278.0, 278.0, 0.0),
+        vfov: 40.0,
+        background_color: Color::zero(),
         ..Default::default()
     };
 

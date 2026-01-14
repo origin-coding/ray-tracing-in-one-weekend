@@ -1,9 +1,8 @@
 //! 材质定义以及相关工具方法。
 
-
-use crate::math::{Color, Ray, Vec3};
 use crate::geometry::HitRecord;
 use crate::material::{SolidColor, Texture};
+use crate::math::{Color, Point3, Ray, Vec3};
 use crate::utils::random_double;
 use std::sync::Arc;
 
@@ -20,6 +19,20 @@ pub trait Material {
     ///
     /// 如果散射成功，返回散射后的颜色和光线；否则返回 None。
     fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)>;
+
+    /// 计算材质在点 p 上的发光颜色。
+    ///
+    /// # 参数
+    ///
+    /// * `uv` - 点 p 在材质上的纹理坐标。
+    /// * `p` - 点 p 的位置。
+    ///
+    /// # 返回值
+    ///
+    /// 点 p 上的发光颜色。
+    fn emitted(&self, _: (f64, f64), _: &Point3) -> Color {
+        Color::zero()
+    }
 }
 
 /// 朗伯材质
@@ -75,7 +88,11 @@ impl Metal {
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
         let reflected = r_in.direction.reflect(rec.normal);
-        let scattered = Ray::new_with_time(rec.p, reflected + self.fuzz * Vec3::random_unit(), r_in.time);
+        let scattered = Ray::new_with_time(
+            rec.p,
+            reflected + self.fuzz * Vec3::random_unit(),
+            r_in.time,
+        );
         if scattered.direction.dot(rec.normal) > 0.0 {
             Some((self.albedo, scattered))
         } else {
@@ -128,5 +145,49 @@ impl Material for Dielectric {
 
         let scattered = Ray::new_with_time(rec.p, direction, r_in.time);
         Some((attenuation, scattered))
+    }
+}
+
+/// 漫反射光源纹理，将颜色映射到点上。
+pub struct DiffuseLight {
+    /// 光源的颜色纹理。
+    texture: Arc<dyn Texture + Send + Sync>,
+}
+
+impl DiffuseLight {
+    /// 创建一个新的漫反射光源纹理。
+    ///
+    /// # Arguments
+    ///
+    /// * `texture` - 光源的颜色纹理。
+    ///
+    /// # Returns
+    ///
+    /// 新的漫反射光源纹理。
+    pub fn new(texture: Arc<dyn Texture + Send + Sync>) -> Self {
+        Self { texture }
+    }
+
+    /// 创建一个新的漫反射光源纹理，使用纯色颜色。
+    ///
+    /// # Arguments
+    ///
+    /// * `color` - 光源的颜色。
+    ///
+    /// # Returns
+    ///
+    /// 新的漫反射光源纹理。
+    pub fn from_color(color: Color) -> Self {
+        Self::new(Arc::new(SolidColor::new(color)))
+    }
+}
+
+impl Material for DiffuseLight {
+    fn scatter(&self, _: &Ray, _: &HitRecord<'_>) -> Option<(Color, Ray)> {
+        None
+    }
+
+    fn emitted(&self, uv: (f64, f64), p: &Point3) -> Color {
+        self.texture.value(uv, p)
     }
 }

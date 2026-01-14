@@ -1,7 +1,7 @@
 //! 相机和Builder的定义以及相关工具方法。
 
 use crate::geometry::Hittable;
-use crate::math::{color::write_color, Color, Interval, Point3, Ray, Vec3};
+use crate::math::{Color, Interval, Point3, Ray, Vec3, color::write_color};
 use crate::utils::{random_double, random_double_range_inclusive};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
@@ -27,6 +27,7 @@ pub struct CameraBuilder {
     up: Vec3,
     defocus_angle: f64,
     focus_dist: f64,
+    background_color: Color,
 }
 
 impl Default for CameraBuilder {
@@ -42,6 +43,7 @@ impl Default for CameraBuilder {
             up: Vec3::unit_y(),
             defocus_angle: 0.0,
             focus_dist: 10.0,
+            background_color: Color::zero(),
         }
     }
 }
@@ -97,6 +99,11 @@ impl CameraBuilder {
         self
     }
 
+    pub fn background_color(mut self, background_color: Color) -> Self {
+        self.background_color = background_color;
+        self
+    }
+
     pub fn build(self) -> Camera {
         // 计算画布高度
         let image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
@@ -147,6 +154,7 @@ impl CameraBuilder {
             defocus_angle: self.defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
+            background_color: self.background_color,
         }
     }
 }
@@ -174,6 +182,7 @@ pub struct Camera {
     defocus_angle: f64,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
+    background_color: Color,
 }
 
 impl Camera {
@@ -198,17 +207,18 @@ impl Camera {
 
         // 如果命中了物体，那么计算物体颜色
         if let Some(rec) = world.hit(&r, Interval::new(0.001, f64::INFINITY)) {
-            return if let Some((albedo, scattered)) = rec.mat.scatter(&r, &rec) {
-                albedo * self.ray_color(scattered, world, depth - 1)
-            } else {
-                Color::zero()
-            };
-        }
+            let emitted = rec.mat.emitted(rec.uv, &rec.p);
 
-        // 这里实现一个从蓝色到白色的线性差值
-        let unit_direction = r.direction.unit_vector();
-        let a = 0.5 * (unit_direction.y + 1.0);
-        (1.0 - a) * Color::one() + a * Color::new(0.5, 0.7, 1.0)
+            if let Some((albedo, scattered)) = rec.mat.scatter(&r, &rec) {
+                let scattered = albedo * self.ray_color(scattered, world, depth - 1);
+                scattered + emitted // 物体反射光 + 物体发光
+            } else {
+                emitted
+            }
+        } else {
+            // 如果没有命中物体，那么返回背景颜色
+            self.background_color
+        }
     }
 
     /// 生成一条射线。
@@ -287,7 +297,7 @@ impl Camera {
                 // 进度条逻辑
                 let remaining = rows_remaining.fetch_sub(1, Ordering::Relaxed);
                 if remaining % 10 == 0 {
-                    eprint!("\rScan lines remaining: {:>3}", remaining);
+                    eprint!("\rScan lines remaining: {:>4}", remaining);
                 }
 
                 let mut row = Vec::with_capacity(self.image_width as usize);
