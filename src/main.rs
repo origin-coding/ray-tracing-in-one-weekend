@@ -18,15 +18,21 @@ fn main() {
         camera_config,
     } = scene_generator.generate(&scene_config);
 
+    // 转换为 BVH 树
     let world = BvhNode::from_hittable_list(world);
 
     // 创建/打开输出文件
     let file = File::create(&render_config.output_path).expect("Failed to create output file");
     let mut buffer = BufWriter::new(file);
 
+    // 优先使用相机配置中的 aspect_ratio，否则使用渲染配置中的 aspect_ratio
+    let final_aspect_ratio = camera_config
+        .aspect_ratio
+        .unwrap_or(render_config.aspect_ratio);
+
     // 创建相机，渲染场景
     let camera = CameraBuilder::default()
-        .aspect_ratio(render_config.aspect_ratio)
+        .aspect_ratio(final_aspect_ratio)
         .image_width(render_config.image_width)
         .samples_per_pixel(render_config.samples_per_pixel)
         .max_depth(render_config.max_depth)

@@ -7,6 +7,7 @@ mod earth;
 mod light;
 mod perlin;
 mod quad;
+mod cornell_smoke;
 
 use crate::config::{CameraConfig, SceneConfig, SceneType};
 use crate::geometry::HittableList;
@@ -50,5 +51,6 @@ pub fn get_scene(scene_type: SceneType) -> Box<dyn Scene> {
         SceneType::Quad => Box::new(quad::QuadScene),
         SceneType::Light => Box::new(light::LightScene),
         SceneType::CornellBox => Box::new(cornell_box::CornellBoxScene),
+        SceneType::CornellSmoke => Box::new(cornell_smoke::CornellSmokeScene),
     }
 }

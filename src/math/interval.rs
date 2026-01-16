@@ -1,5 +1,7 @@
 //! 时间区间的类型定义、相关常量和方法。
 
+use std::ops::Add;
+
 /// 时间区间的类型定义，包含一个最小时间和一个最大时间。
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Interval {
@@ -81,5 +83,21 @@ impl Default for Interval {
     #[inline]
     fn default() -> Self {
         Self::EMPTY
+    }
+}
+
+impl Add<f64> for Interval {
+    type Output = Self;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        Self::new(self.min + rhs, self.max + rhs)
+    }
+}
+
+impl Add<Interval> for f64 {
+    type Output = Interval;
+
+    fn add(self, rhs: Interval) -> Self::Output {
+        rhs + self
     }
 }

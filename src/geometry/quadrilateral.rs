@@ -1,6 +1,6 @@
 //! 四边形类型的定义，以及它的光线碰撞检测逻辑。
 
-use crate::geometry::{Aabb, HitRecord, Hittable};
+use crate::geometry::{Aabb, HitRecord, Hittable, HittableList};
 use crate::material::Material;
 use crate::math::{Interval, Point3, Ray, Vec3};
 use std::sync::Arc;
@@ -53,6 +53,71 @@ impl Quadrilateral {
             w,
         }
     }
+
+    /// 创建一个盒子，由两个点 a, b 定义的矩形表面，材质为 material。
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - 盒子的一个顶点。
+    /// * `b` - 盒子的另一个顶点。
+    /// * `material` - 盒子的材质。
+    ///
+    /// # Returns
+    ///
+    /// 包含六个四边形的 HittableList，构成一个盒子。
+    pub fn create_box(
+        a: &Point3,
+        b: &Point3,
+        material: Arc<dyn Material + Send + Sync>,
+    ) -> HittableList {
+        let mut sides = HittableList::new();
+
+        let min = Point3::new(a.x.min(b.x), a.y.min(b.y), a.z.min(b.z));
+        let max = Point3::new(a.x.max(b.x), a.y.max(b.y), a.z.max(b.z));
+
+        let dx = Vec3::new(max.x - min.x, 0.0, 0.0);
+        let dy = Vec3::new(0.0, max.y - min.y, 0.0);
+        let dz = Vec3::new(0.0, 0.0, max.z - min.z);
+
+        sides.add(Box::new(Quadrilateral::new(
+            Point3::new(min.x, min.y, max.z),
+            dx,
+            dy,
+            material.clone(),
+        )));
+        sides.add(Box::new(Quadrilateral::new(
+            Point3::new(max.x, min.y, max.z),
+            -dz,
+            dy,
+            material.clone(),
+        )));
+        sides.add(Box::new(Quadrilateral::new(
+            Point3::new(max.x, min.y, min.z),
+            -dx,
+            dy,
+            material.clone(),
+        )));
+        sides.add(Box::new(Quadrilateral::new(
+            Point3::new(min.x, min.y, min.z),
+            dz,
+            dy,
+            material.clone(),
+        )));
+        sides.add(Box::new(Quadrilateral::new(
+            Point3::new(min.x, max.y, max.z),
+            dx,
+            -dz,
+            material.clone(),
+        )));
+        sides.add(Box::new(Quadrilateral::new(
+            Point3::new(min.x, min.y, min.z),
+            dx,
+            dz,
+            material.clone(),
+        )));
+
+        sides
+    }
 }
 
 impl Hittable for Quadrilateral {
@@ -84,7 +149,7 @@ impl Hittable for Quadrilateral {
             intersection,
             self.normal,
             t,
-            (alpha, beta),  // 四边形的 uv 一般在 [0, 1] 范围内，使用 alpha, beta 表示
+            (alpha, beta), // 四边形的 uv 一般在 [0, 1] 范围内，使用 alpha, beta 表示
             r,
             self.material.as_ref(),
         ))

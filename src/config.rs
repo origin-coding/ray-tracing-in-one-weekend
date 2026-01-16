@@ -65,8 +65,10 @@ pub enum SceneType {
     Quad,
     /// 光照场景 (对应 Chapter 7)
     Light,
-    /// Cornell Box 场景 (对应 Chapter 7)
+    /// Cornell Box 场景 (对应 Chapter 7、8)
     CornellBox,
+    /// Cornell Box 烟雾场景 (对应 Chapter 9)
+    CornellSmoke,
 }
 
 /// 场景配置，包含一个可选的图像纹理路径。
@@ -108,6 +110,7 @@ pub struct CameraConfig {
     pub defocus_angle: f64,
     pub focus_dist: f64,
     pub background_color: Color,
+    pub aspect_ratio: Option<f64>,
 }
 
 impl Default for CameraConfig {
@@ -120,6 +123,7 @@ impl Default for CameraConfig {
             defocus_angle: 0.0,
             focus_dist: 10.0,
             background_color: Color::zero(),
+            aspect_ratio: None,
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::config::{CameraConfig, SceneConfig};
-use crate::geometry::{HittableList, Quadrilateral, RotateY, Translate};
+use crate::geometry::{ConstantMedium, HittableList, Quadrilateral, RotateY, Translate};
 use crate::material::Lambertian;
 use crate::material::material::DiffuseLight;
 use crate::math::{Color, Point3, Vec3};
@@ -7,9 +7,9 @@ use crate::scene::{Scene, SceneContext};
 use std::sync::Arc;
 
 ///  Cornell Box 场景
-pub struct CornellBoxScene;
+pub struct CornellSmokeScene;
 
-impl Scene for CornellBoxScene {
+impl Scene for CornellSmokeScene {
     //noinspection DuplicatedCode
     fn generate(&self, _config: &SceneConfig) -> SceneContext {
         let mut world = HittableList::new();
@@ -67,6 +67,7 @@ impl Scene for CornellBoxScene {
         );
         let box1 = RotateY::new(Arc::new(box1), 15.0);
         let box1 = Translate::new(Arc::new(box1), Vec3::new(265.0, 0.0, 295.0));
+        let box1 = ConstantMedium::new_with_color(Arc::new(box1), 0.01, Color::new(0.0, 0.0, 0.0));
         world.add(Box::new(box1));
 
         let box2 = Quadrilateral::create_box(
@@ -76,6 +77,7 @@ impl Scene for CornellBoxScene {
         );
         let box2 = RotateY::new(Arc::new(box2), -18.0);
         let box2 = Translate::new(Arc::new(box2), Vec3::new(130.0, 0.0, 65.0));
+        let box2 = ConstantMedium::new_with_color(Arc::new(box2), 0.01, Color::new(1.0, 1.0, 1.0));
         world.add(Box::new(box2));
 
         // （在运行时记得设置 --aspect-ratio 1，将图片渲染为正方形）
