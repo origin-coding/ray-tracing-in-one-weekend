@@ -3,6 +3,7 @@
 use crate::geometry::Aabb;
 use crate::material::Material;
 use crate::math::{Interval, Point3, Ray, Vec3};
+use std::sync::Arc;
 
 /// 碰撞记录
 pub struct HitRecord<'a> {
@@ -64,4 +65,26 @@ pub trait Hittable {
 
     /// 获取物体的碰撞检测盒
     fn bounding_box(&self) -> Aabb;
+}
+
+/// 实现 Hittable Trait 对 Box 类型的支持
+impl<T: Hittable + ?Sized> Hittable for Box<T> {
+    fn hit(&self, r: &Ray, interval: Interval) -> Option<HitRecord<'_>> {
+        (**self).hit(r, interval)
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        (**self).bounding_box()
+    }
+}
+
+/// 实现 Hittable Trait 对 Arc 类型的支持
+impl<T: Hittable + ?Sized> Hittable for Arc<T> {
+    fn hit(&self, r: &Ray, interval: Interval) -> Option<HitRecord<'_>> {
+        (**self).hit(r, interval)
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        (**self).bounding_box()
+    }
 }

@@ -6,7 +6,7 @@ use crate::math::{Color, Point3, Vec3};
 use crate::scene::{Scene, SceneContext};
 use std::sync::Arc;
 
-///  Cornell Box 场景
+///  Cornell Box 烟雾场景
 pub struct CornellSmokeScene;
 
 impl Scene for CornellSmokeScene {

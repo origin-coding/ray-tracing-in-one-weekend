@@ -69,6 +69,8 @@ pub enum SceneType {
     CornellBox,
     /// Cornell Box 烟雾场景 (对应 Chapter 9)
     CornellSmoke,
+    /// Cornell Box 最终场景 (对应 Chapter 10)
+    CornellFinal,
 }
 
 /// 场景配置，包含一个可选的图像纹理路径。
