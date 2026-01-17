@@ -94,7 +94,7 @@ $env:RAYON_NUM_THREADS=8; cargo run --release -- --scene cornell-final --image-t
 ```
 
 > **⚠️ 高负载预警**：
-> 上述配置属于极端质量设置。作为参考，在 **Intel Core Ultra 7 255H (8 线程)** 处理器上，该渲染任务需要 **数小时**
+> 上述配置属于极端质量设置。作为参考，在 **Intel Core Ultra 7 255H (共 16 核心，使用 8 线程)** 处理器上，该渲染任务需要 **数小时**
 > 才能完成。请做好长时间运行的心理准备，并确保设备散热良好。
 
 ## 🚀 并发控制与性能 (Concurrency & Performance)
