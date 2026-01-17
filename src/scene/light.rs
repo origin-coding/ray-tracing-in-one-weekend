@@ -1,10 +1,9 @@
 use crate::config::{CameraConfig, SceneConfig};
 use crate::geometry::{HittableList, Quadrilateral, Sphere};
-use crate::material::Lambertian;
-use crate::material::material::DiffuseLight;
-use crate::material::texture::NoiseTexture;
+use crate::material::{DiffuseLight, Lambertian};
 use crate::math::{Color, Point3, Vec3};
 use crate::scene::{Scene, SceneContext};
+use crate::texture::Noise;
 use std::sync::Arc;
 
 /// 简单光照场景
@@ -14,7 +13,7 @@ impl Scene for LightScene {
     fn generate(&self, _config: &SceneConfig) -> SceneContext {
         let mut world = HittableList::new();
 
-        let per_text = Arc::new(NoiseTexture::new(4.0));
+        let per_text = Arc::new(Noise::new(4.0));
         let per_material = Arc::new(Lambertian::new(per_text));
 
         world.add(Box::new(Sphere::stationary(

@@ -1,9 +1,9 @@
 //! 常量介质的定义及其实现。
 
 use crate::geometry::{Aabb, HitRecord, Hittable};
-use crate::material::material::Isotropic;
-use crate::material::{Material, SolidColor};
+use crate::material::{Isotropic, Material};
 use crate::math::{Color, Interval, Ray, Vec3};
+use crate::texture::SolidColor;
 use crate::utils::random_double;
 use std::sync::Arc;
 

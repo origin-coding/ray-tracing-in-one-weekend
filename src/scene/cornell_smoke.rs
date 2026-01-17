@@ -1,7 +1,6 @@
 use crate::config::{CameraConfig, SceneConfig};
 use crate::geometry::{ConstantMedium, HittableList, Quadrilateral, RotateY, Translate};
-use crate::material::Lambertian;
-use crate::material::material::DiffuseLight;
+use crate::material::{DiffuseLight, Lambertian};
 use crate::math::{Color, Point3, Vec3};
 use crate::scene::{Scene, SceneContext};
 use std::sync::Arc;

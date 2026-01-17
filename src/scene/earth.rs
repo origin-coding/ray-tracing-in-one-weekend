@@ -1,8 +1,9 @@
 use crate::config::{CameraConfig, SceneConfig};
 use crate::geometry::{HittableList, Sphere};
-use crate::material::{ImageTexture, Lambertian};
+use crate::material::Lambertian;
 use crate::math::{Color, Point3};
 use crate::scene::{Scene, SceneContext};
+use crate::texture::Image;
 use std::sync::Arc;
 
 /// 生成地球纹理场景。
@@ -18,7 +19,7 @@ impl Scene for EarthScene {
             .expect("Earth scene requires --image-texture-path");
         eprintln!("Loading image texture from: {:?}", path);
 
-        let earth_texture = Arc::new(ImageTexture::new(path));
+        let earth_texture = Arc::new(Image::new(path));
         let earth_surface = Arc::new(Lambertian::new(earth_texture));
 
         world.add(Box::new(Sphere::stationary(

@@ -1,8 +1,9 @@
 use crate::config::{CameraConfig, SceneConfig};
 use crate::geometry::{HittableList, Sphere};
-use crate::material::{Checker, Dielectric, Lambertian, Material, Metal};
+use crate::material::{Dielectric, Lambertian, Material, Metal};
 use crate::math::{Color, Point3, Vec3};
 use crate::scene::{Scene, SceneContext};
+use crate::texture::Checker;
 use crate::utils::{random_double, random_double_range};
 use rand::distr::weighted::WeightedIndex;
 use rand::prelude::Distribution;

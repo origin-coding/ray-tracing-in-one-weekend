@@ -2,9 +2,10 @@ use crate::config::{CameraConfig, SceneConfig};
 use crate::geometry::{
     BvhNode, ConstantMedium, HittableList, Quadrilateral, RotateY, Sphere, Translate,
 };
-use crate::material::{Dielectric, DiffuseLight, ImageTexture, Lambertian, Metal, NoiseTexture};
+use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::math::{Color, Point3, Vec3};
 use crate::scene::{Scene, SceneContext};
+use crate::texture::{Image, Noise};
 use crate::utils::random_double_range;
 use std::sync::Arc;
 
@@ -116,7 +117,7 @@ impl Scene for CornellFinalScene {
             .as_ref()
             .expect("Final scene requires --image-texture-path to render the Earth sphere");
 
-        let earth_mat = Arc::new(Lambertian::new(Arc::new(ImageTexture::new(path))));
+        let earth_mat = Arc::new(Lambertian::new(Arc::new(Image::new(path))));
         world.add(Box::new(Sphere::stationary(
             Point3::new(400.0, 200.0, 400.0),
             100.0,
@@ -124,7 +125,7 @@ impl Scene for CornellFinalScene {
         )));
 
         // --- 9. 柏林噪声球 (Perlin Noise Sphere) ---
-        let per_text = Arc::new(NoiseTexture::new(0.2)); // 缩放因子 0.2
+        let per_text = Arc::new(Noise::new(0.2)); // 缩放因子 0.2
         world.add(Box::new(Sphere::stationary(
             Point3::new(220.0, 280.0, 300.0),
             80.0,

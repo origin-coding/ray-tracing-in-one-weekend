@@ -1,8 +1,8 @@
 //! 颜色定义以及相关工具方法。
 
 use crate::math::Interval;
-use crate::utils::linear_to_gamma;
 use crate::math::Vec3;
+use crate::utils::linear_to_gamma;
 use std::io::Write;
 
 /// 颜色定义，为 Vec3 起一个别名。

@@ -1,8 +1,9 @@
 use crate::config::{CameraConfig, SceneConfig};
 use crate::geometry::{HittableList, Sphere};
-use crate::material::{Checker, Lambertian};
+use crate::material::Lambertian;
 use crate::math::{Color, Point3};
 use crate::scene::{Scene, SceneContext};
+use crate::texture::Checker;
 use std::sync::Arc;
 
 /// 生成棋盘格纹理场景。

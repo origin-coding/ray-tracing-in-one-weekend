@@ -1,9 +1,9 @@
 use crate::config::{CameraConfig, SceneConfig};
 use crate::geometry::{HittableList, Sphere};
 use crate::material::Lambertian;
-use crate::material::texture::NoiseTexture;
 use crate::math::{Color, Point3};
 use crate::scene::{Scene, SceneContext};
+use crate::texture::Noise;
 use std::sync::Arc;
 
 /// 生成柏林噪声纹理场景。
@@ -13,9 +13,9 @@ impl Scene for PerlinScene {
     fn generate(&self, _config: &SceneConfig) -> SceneContext {
         let mut world = HittableList::new();
 
-        let ground_texture = Arc::new(NoiseTexture::new(4.0));
+        let ground_texture = Arc::new(Noise::new(4.0));
         let ground_material = Arc::new(Lambertian::new(ground_texture));
-        let small_sphere_texture = Arc::new(NoiseTexture::new(2.0));
+        let small_sphere_texture = Arc::new(Noise::new(2.0));
         let small_sphere_material = Arc::new(Lambertian::new(small_sphere_texture));
 
         world.add(Box::new(Sphere::stationary(
