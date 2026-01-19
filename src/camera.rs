@@ -1,8 +1,8 @@
 //! 相机和Builder的定义以及相关工具方法。
 
 use crate::geometry::Hittable;
-use crate::math::{Color, Interval, Point3, Ray, Vec3, color::write_color};
-use crate::utils::{random_double, random_double_range_inclusive};
+use crate::math::{color::write_color, Color, Interval, Point3, Ray, Vec3};
+use crate::utils::random_double;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
 use std::io::Write;
@@ -139,10 +139,16 @@ impl CameraBuilder {
         let defocus_disk_u = u * defocus_radius;
         let defocus_disk_v = v * defocus_radius;
 
+        // 计算 sqrt_spp 和 recip_sqrt_spp
+        let sqrt_spp = (self.samples_per_pixel as f64).sqrt() as i32;
+        let recip_sqrt_spp = 1.0 / (sqrt_spp as f64);
+
         Camera {
             aspect_ratio: self.aspect_ratio,
             image_width: self.image_width,
             samples_per_pixel: self.samples_per_pixel,
+            sqrt_spp,
+            recip_sqrt_spp,
             max_depth: self.max_depth,
             vfov: self.vfov,
             image_height,
@@ -150,7 +156,7 @@ impl CameraBuilder {
             pixel_00_loc,
             pixel_delta_u,
             pixel_delta_v,
-            samples_per_scale: 1.0 / (self.samples_per_pixel as f64),
+            samples_per_scale: 1.0 / ((sqrt_spp * sqrt_spp) as f64), // 每个像素的样本数缩放比例，按照实际样本数的平方根来缩放
             defocus_angle: self.defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
@@ -171,6 +177,8 @@ pub struct Camera {
     aspect_ratio: f64,
     image_width: i32,
     samples_per_pixel: i32,
+    sqrt_spp: i32,
+    recip_sqrt_spp: f64,
     max_depth: i32,
     vfov: f64,
     image_height: i32,
@@ -231,8 +239,8 @@ impl Camera {
     /// # 返回值
     ///
     /// 从相机中心到像素采样点的射线。
-    fn get_ray(&self, x: i32, y: i32) -> Ray {
-        let offset = self.sample_square();
+    fn get_ray(&self, x: i32, y: i32, s_i: i32, s_j: i32) -> Ray {
+        let offset = self.sample_square_stratified(s_i, s_j);
         let pixel_center = self.pixel_00_loc
             + (x as f64 + offset.x) * self.pixel_delta_u
             + (y as f64 + offset.y) * self.pixel_delta_v;
@@ -249,17 +257,11 @@ impl Camera {
         Ray::new_with_time(ray_origin, ray_direction, ray_time)
     }
 
-    /// 生成一个随机偏移量，用于抗锯齿。
-    ///
-    /// # 返回值
-    ///
-    /// 一个随机向量，用于偏移像素采样点。
-    fn sample_square(&self) -> Vec3 {
-        Vec3::new(
-            random_double_range_inclusive(-0.5, 0.5),
-            random_double_range_inclusive(-0.5, 0.5),
-            0.0,
-        )
+    fn sample_square_stratified(&self, s_i: i32, s_j: i32) -> Vec3 {
+        // 计算每个样本的偏移量，范围 [-0.5, 0.5]
+        let x = ((s_i as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
+        let y = ((s_j as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
+        Vec3::new(x, y, 0.0)
     }
 
     /// 生成镜头上的随机采样点
@@ -304,9 +306,11 @@ impl Camera {
                 for x in 0..self.image_width {
                     // 生成多条射线，对得到的颜色取平均值
                     let mut color = Color::zero();
-                    for _ in 0..self.samples_per_pixel {
-                        let ray = self.get_ray(x, y);
-                        color += self.ray_color(ray, world, self.max_depth);
+                    for s_j in 0..self.sqrt_spp {
+                        for s_i in 0..self.sqrt_spp {
+                            let ray = self.get_ray(x, y, s_i, s_j);
+                            color += self.ray_color(ray, world, self.max_depth);
+                        }
                     }
                     color *= self.samples_per_scale;
                     row.push(color);
