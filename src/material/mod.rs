@@ -39,7 +39,22 @@ pub trait Material {
     /// # 返回值
     ///
     /// 点 p 上的发光颜色。
-    fn emitted(&self, _: (f64, f64), _: &Point3) -> Color {
+    fn emitted(&self, _uv: (f64, f64), _p: &Point3) -> Color {
         Color::zero()
+    }
+
+    /// 计算材质在点 p 上的散射概率密度函数（PDF）。
+    ///
+    /// # 参数
+    ///
+    /// * `r_in` - 入射光线
+    /// * `rec` - 碰撞记录
+    /// * `scattered` - 散射后的光线
+    ///
+    /// # 返回值
+    ///
+    /// 材质在点 p 上的散射概率密度函数值。
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord<'_>, _scattered: &Ray) -> f64 {
+        0.0
     }
 }

@@ -1,7 +1,7 @@
 //! 相机和Builder的定义以及相关工具方法。
 
 use crate::geometry::Hittable;
-use crate::math::{color::write_color, Color, Interval, Point3, Ray, Vec3};
+use crate::math::{Color, Interval, Point3, Ray, Vec3, color::write_color};
 use crate::utils::random_double;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
@@ -218,8 +218,14 @@ impl Camera {
             let emitted = rec.mat.emitted(rec.uv, &rec.p);
 
             if let Some((albedo, scattered)) = rec.mat.scatter(&r, &rec) {
-                let scattered = albedo * self.ray_color(scattered, world, depth - 1);
-                scattered + emitted // 物体反射光 + 物体发光
+                let scattering_pdf = rec.mat.scattering_pdf(&r, &rec, &scattered);
+                let pdf_value = scattering_pdf;
+
+                let color_from_scatter =
+                    (albedo * scattering_pdf * self.ray_color(scattered, world, depth - 1))
+                        / pdf_value;
+
+                color_from_scatter + emitted // 物体反射光 + 物体发光
             } else {
                 emitted
             }

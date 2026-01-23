@@ -4,6 +4,7 @@ use crate::geometry::HitRecord;
 use crate::material::Material;
 use crate::math::{Color, Ray, Vec3};
 use crate::texture::{SolidColor, Texture};
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// 朗伯材质
@@ -27,7 +28,7 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
-        let scatter_direction = rec.normal + Vec3::random_unit();
+        let scatter_direction = Vec3::random_on_hemisphere(rec.normal);
         let scatter_direction = if scatter_direction.near_zero() {
             rec.normal
         } else {
@@ -37,5 +38,9 @@ impl Material for Lambertian {
         let scattered = Ray::new_with_time(rec.p, scatter_direction, r_in.time);
         let attenuation = self.texture.value(rec.uv, &rec.p);
         Some((attenuation, scattered))
+    }
+
+    fn scattering_pdf(&self, _: &Ray, _: &HitRecord<'_>, _: &Ray) -> f64 {
+        1.0 / (2.0 * PI)
     }
 }
