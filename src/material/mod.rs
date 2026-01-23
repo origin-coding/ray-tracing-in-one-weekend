@@ -15,6 +15,9 @@ pub use isotropic::Isotropic;
 pub use lambertian::Lambertian;
 pub use metal::Metal;
 
+/// 概率密度函数（PDF）的类型别名
+pub type Pdf = f64;
+
 /// 材质定义
 pub trait Material {
     /// 散射光线
@@ -27,7 +30,7 @@ pub trait Material {
     /// # 返回值
     ///
     /// 如果散射成功，返回散射后的颜色和光线；否则返回 None。
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)>;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray, Option<Pdf>)>;
 
     /// 计算材质在点 p 上的发光颜色。
     ///
@@ -54,7 +57,7 @@ pub trait Material {
     /// # 返回值
     ///
     /// 材质在点 p 上的散射概率密度函数值。
-    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord<'_>, _scattered: &Ray) -> f64 {
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord<'_>, _scattered: &Ray) -> Pdf {
         0.0
     }
 }

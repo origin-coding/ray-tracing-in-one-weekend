@@ -1,7 +1,8 @@
 use crate::geometry::HitRecord;
-use crate::material::Material;
+use crate::material::{Material, Pdf};
 use crate::math::{Color, Ray, Vec3};
 use crate::texture::Texture;
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// 全反射材质
@@ -24,9 +25,13 @@ impl Isotropic {
 }
 
 impl Material for Isotropic {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray, Option<Pdf>)> {
         let scattered = Ray::new_with_time(rec.p, Vec3::random_unit(), r_in.time);
         let attenuation = self.texture.value(rec.uv, &rec.p);
-        Some((attenuation, scattered))
+        Some((attenuation, scattered, Some(1.0 / (4.0 * PI))))
+    }
+
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord<'_>, _scattered: &Ray) -> Pdf {
+        1.0 / (4.0 * PI)
     }
 }

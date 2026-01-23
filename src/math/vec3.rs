@@ -118,6 +118,23 @@ impl Vec3 {
         }
     }
 
+    /// 生成一个余弦分布的随机单位向量（位于 Z 轴半球）
+    /// 用于重要性采样
+    #[inline]
+    pub fn random_cosine_direction() -> Self {
+        let r1 = random_double();
+        let r2 = random_double();
+
+        // 极坐标转换
+        let z = (1.0 - r2).sqrt(); // z 轴分量，越接近 1 概率越大
+
+        let phi = 2.0 * std::f64::consts::PI * r1;
+        let x = phi.cos() * r2.sqrt();
+        let y = phi.sin() * r2.sqrt();
+
+        Self::new(x, y, z)
+    }
+
     /// 计算向量的模长平方，在某些场景下可以简化向量的比较，避免开方运算造成性能损失。
     #[inline]
     pub fn length_squared(self) -> f64 {

@@ -18,7 +18,6 @@ pub fn write_color<W: Write>(out: &mut W, color: Color) -> std::io::Result<()> {
     let b = linear_to_gamma(color.z);
 
     // 将 [0,1] 转换为 [0,255]
-    // 这里暂时直接转换，书的后面章节会加入 Gamma 校正和 Clamp 限制
     let ir = (INTENSITY.clamp(r) * 255.999) as i32;
     let ig = (INTENSITY.clamp(g) * 255.999) as i32;
     let ib = (INTENSITY.clamp(b) * 255.999) as i32;

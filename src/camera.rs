@@ -213,26 +213,34 @@ impl Camera {
             return Color::zero();
         }
 
-        // 如果命中了物体，那么计算物体颜色
-        if let Some(rec) = world.hit(&r, Interval::new(0.001, f64::INFINITY)) {
-            let emitted = rec.mat.emitted(rec.uv, &rec.p);
+        // 如果没有命中任何物体，返回背景颜色
+        let Some(rec) = world.hit(&r, Interval::new(0.001, f64::INFINITY)) else {
+            return self.background_color;
+        };
 
-            if let Some((albedo, scattered)) = rec.mat.scatter(&r, &rec) {
+        // 计算自发光颜色
+        let emitted = rec.mat.emitted(rec.uv, &rec.p);
+
+        // 如果材质没有散射，那么直接返回自发光颜色
+        let Some((attenuation, scattered, pdf_opt)) = rec.mat.scatter(&r, &rec) else {
+            return emitted;
+        };
+
+        // 计算散射后的光线颜色 (递归)
+        let color_from_scatter = match pdf_opt {
+            Some(pdf_value) => {
                 let scattering_pdf = rec.mat.scattering_pdf(&r, &rec, &scattered);
-                let pdf_value = scattering_pdf;
+                // 这里的递归放在后面
+                let li = self.ray_color(scattered, world, depth - 1);
 
-                let color_from_scatter =
-                    (albedo * scattering_pdf * self.ray_color(scattered, world, depth - 1))
-                        / pdf_value;
-
-                color_from_scatter + emitted // 物体反射光 + 物体发光
-            } else {
-                emitted
+                (attenuation * scattering_pdf * li) / pdf_value
             }
-        } else {
-            // 如果没有命中物体，那么返回背景颜色
-            self.background_color
-        }
+
+            None => attenuation * self.ray_color(scattered, world, depth - 1),
+        };
+
+        // 返回最终得到的颜色
+        emitted + color_from_scatter
     }
 
     /// 生成一条射线。
@@ -328,7 +336,7 @@ impl Camera {
         // 2. 串行输出阶段
         for row in scan_lines {
             for color in row {
-                write_color(out, color).expect("Failed to write color to stdout");
+                write_color(out, color).expect("Failed to write color to writer");
             }
         }
 

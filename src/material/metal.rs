@@ -1,5 +1,5 @@
 use crate::geometry::HitRecord;
-use crate::material::Material;
+use crate::material::{Material, Pdf};
 use crate::math::{Color, Ray, Vec3};
 
 /// 金属材质
@@ -19,7 +19,7 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray, Option<Pdf>)> {
         let reflected = r_in.direction.reflect(rec.normal);
         let scattered = Ray::new_with_time(
             rec.p,
@@ -27,7 +27,7 @@ impl Material for Metal {
             r_in.time,
         );
         if scattered.direction.dot(rec.normal) > 0.0 {
-            Some((self.albedo, scattered))
+            Some((self.albedo, scattered, None))
         } else {
             None
         }
