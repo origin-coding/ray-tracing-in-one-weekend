@@ -2,6 +2,7 @@
 
 use crate::geometry::Hittable;
 use crate::math::{Color, Interval, Point3, Ray, Vec3, color::write_color};
+use crate::sampling::{CosinePdf, HittablePdf, MixturePdf, Pdf};
 use crate::utils::random_double;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
@@ -207,7 +208,7 @@ impl Camera {
     /// # 返回值
     ///
     /// 射线的颜色。
-    fn ray_color(&self, r: Ray, world: &dyn Hittable, depth: i32) -> Color {
+    fn ray_color(&self, r: Ray, world: &dyn Hittable, lights: &dyn Hittable, depth: i32) -> Color {
         // 如果递归深度为 0，那么返回黑色
         if depth <= 0 {
             return Color::zero();
@@ -219,7 +220,7 @@ impl Camera {
         };
 
         // 计算自发光颜色
-        let emitted = rec.mat.emitted(rec.uv, &rec.p);
+        let emitted = rec.mat.emitted(rec.uv, &rec.p, &r, &rec);
 
         // 如果材质没有散射，那么直接返回自发光颜色
         let Some((attenuation, scattered, pdf_opt)) = rec.mat.scatter(&r, &rec) else {
@@ -228,15 +229,26 @@ impl Camera {
 
         // 计算散射后的光线颜色 (递归)
         let color_from_scatter = match pdf_opt {
-            Some(pdf_value) => {
+            Some(_) => {
+                let light_pdf = HittablePdf::new(lights, rec.p);
+                let surface_pdf = CosinePdf::new(rec.normal);
+                let mixture_pdf = MixturePdf::new(&light_pdf, &surface_pdf);
+
+                let scattered = Ray::new_with_time(rec.p, mixture_pdf.generate(), r.time);
+                let pdf_value = mixture_pdf.value(scattered.direction);
+
                 let scattering_pdf = rec.mat.scattering_pdf(&r, &rec, &scattered);
                 // 这里的递归放在后面
-                let li = self.ray_color(scattered, world, depth - 1);
+                let li = self.ray_color(scattered, world, lights, depth - 1);
 
-                (attenuation * scattering_pdf * li) / pdf_value
+                if pdf_value > 0.0 {
+                    (attenuation * scattering_pdf * li) / pdf_value
+                } else {
+                    Color::zero()
+                }
             }
 
-            None => attenuation * self.ray_color(scattered, world, depth - 1),
+            None => attenuation * self.ray_color(scattered, world, lights, depth - 1),
         };
 
         // 返回最终得到的颜色
@@ -289,7 +301,12 @@ impl Camera {
     /// # 参数
     ///
     /// * `world` - 场景中的可命中对象。
-    pub fn render(&self, world: &(dyn Hittable + Send + Sync), out: &mut impl Write) {
+    pub fn render(
+        &self,
+        world: &(dyn Hittable + Send + Sync),
+        lights: &(dyn Hittable + Send + Sync),
+        out: &mut impl Write,
+    ) {
         // 开始渲染
         writeln!(
             out,
@@ -323,7 +340,7 @@ impl Camera {
                     for s_j in 0..self.sqrt_spp {
                         for s_i in 0..self.sqrt_spp {
                             let ray = self.get_ray(x, y, s_i, s_j);
-                            color += self.ray_color(ray, world, self.max_depth);
+                            color += self.ray_color(ray, world, lights, self.max_depth);
                         }
                     }
                     color *= self.samples_per_scale;

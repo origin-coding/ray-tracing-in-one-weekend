@@ -37,6 +37,7 @@ impl Scene for EarthScene {
 
         SceneContext {
             world,
+            lights: HittableList::new(),
             camera_config,
         }
     }

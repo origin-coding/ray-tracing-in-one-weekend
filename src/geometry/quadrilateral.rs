@@ -2,7 +2,8 @@
 
 use crate::geometry::{Aabb, HitRecord, Hittable, HittableList};
 use crate::material::Material;
-use crate::math::{Interval, Point3, Ray, Vec3};
+use crate::math::{Interval, PdfValue, Point3, Ray, Vec3};
+use crate::utils::random_double;
 use std::sync::Arc;
 
 /// 四边形类型定义，包含起始点 Q 和两个向量 U、V，以及材质。
@@ -20,6 +21,9 @@ pub struct Quadrilateral {
     normal: Vec3,
     d: f64,
     w: Vec3, // 用于快速计算平面坐标 alpha, beta
+
+    // 四边形的面积，方便计算 PDF 值
+    area: f64,
 }
 
 impl Quadrilateral {
@@ -51,6 +55,7 @@ impl Quadrilateral {
             normal,
             d,
             w,
+            area: n.length(),
         }
     }
 
@@ -157,5 +162,57 @@ impl Hittable for Quadrilateral {
 
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
+    }
+
+    fn pdf_value(&self, origin: Point3, direction: Vec3) -> PdfValue {
+        // 1. 射线-平面求交
+        let denom = self.normal.dot(direction);
+
+        // 如果光线与平面平行，PDF 为 0
+        if denom.abs() < 1e-8 {
+            return 0.0;
+        }
+
+        // 计算 t
+        // 理论上，如果是对光源采样，direction = target - origin，所以 t 应该等于 1.0
+        // 但这里我们计算出真实的 t，用于后续校验
+        let t = (self.d - self.normal.dot(origin)) / denom;
+
+        // 2. 检查 t 是否有效
+        // 我们只关心从 origin 发出的光线。
+        // 对于光源采样，t 应该在 1.0 附近；对于材质采样，t 只要 > 0.001 即可。
+        // 这里为了通用，我们只限制最小距离，防止自相交。
+        if t < 0.001 {
+            return 0.0;
+        }
+
+        // 3. 检查落点是否在四边形内 (这是最关键的一步！)
+        let intersection = origin + t * direction;
+        let planer_hit_point_vector = intersection - self.q;
+
+        let alpha = self.w.dot(planer_hit_point_vector.cross(self.v));
+        let beta = self.w.dot(self.u.cross(planer_hit_point_vector));
+
+        // ⚠️ 关键修复：使用宽松的边界检查 (EPSILON)
+        // 允许 -0.001 到 1.001 的范围，防止因为浮点误差导致明明在表面上的点被判定为无效
+        const EPSILON: f64 = 1e-3;
+        if alpha < -EPSILON || alpha > 1.0 + EPSILON || beta < -EPSILON || beta > 1.0 + EPSILON {
+            return 0.0;
+        }
+
+        // 4. 计算 PDF
+        let distance_squared = t * t * direction.length_squared();
+        let cosine = (denom / direction.length()).abs();
+
+        if cosine < 1e-8 {
+            return 0.0;
+        }
+
+        distance_squared / (self.area * cosine)
+    }
+
+    fn random(&self, origin: Point3) -> Vec3 {
+        let p = self.q + self.u * random_double() + self.v * random_double();
+        p - origin
     }
 }

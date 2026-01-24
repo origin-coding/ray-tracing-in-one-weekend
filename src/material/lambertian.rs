@@ -1,7 +1,7 @@
 //! 朗伯材质模块，定义了朗伯材质的行为。
 
 use crate::geometry::HitRecord;
-use crate::material::{Material, Pdf};
+use crate::material::{Material, PdfValue};
 use crate::math::{Color, Onb, Ray, Vec3};
 use crate::texture::{SolidColor, Texture};
 use std::f64::consts::PI;
@@ -27,7 +27,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray, Option<Pdf>)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray, Option<PdfValue>)> {
         let uvw = Onb::build_from_w(rec.normal);
 
         let scatter_direction = uvw.local_vec(Vec3::random_cosine_direction());

@@ -13,3 +13,6 @@ pub use onb::Onb;
 pub use perlin::Perlin;
 pub use ray::{Point3, Ray};
 pub use vec3::Vec3;
+
+/// 概率密度函数（PDF）的值类型。
+pub type PdfValue = f64;

@@ -2,7 +2,7 @@
 
 use crate::geometry::Aabb;
 use crate::material::Material;
-use crate::math::{Interval, Point3, Ray, Vec3};
+use crate::math::{Interval, PdfValue, Point3, Ray, Vec3};
 use std::sync::Arc;
 
 /// 碰撞记录
@@ -61,10 +61,47 @@ impl<'a> HitRecord<'a> {
 /// 碰撞检测接口
 pub trait Hittable {
     /// 检测光线在给定时间范围内能否与物体发生碰撞
+    /// # 参数
+    ///
+    /// * `r` - 碰撞检测时的光线
+    /// * `interval` - 碰撞检测的时间范围
+    ///
+    /// # 返回值
+    ///
+    /// 如果光线与物体发生碰撞，则返回碰撞记录；否则返回 None。
     fn hit(&self, r: &Ray, interval: Interval) -> Option<HitRecord<'_>>;
 
     /// 获取物体的碰撞检测盒
+    /// # 返回值
+    ///
+    /// 物体的碰撞检测盒。
     fn bounding_box(&self) -> Aabb;
+
+    /// 计算从原点到方向向量的 PDF 值
+    /// # 参数
+    ///
+    /// * `origin` - 计算 PDF 值的原点
+    /// * `direction` - 计算 PDF 值的方向向量
+    ///
+    /// # 返回值
+    ///
+    /// 从原点到方向向量的 PDF 值。
+    fn pdf_value(&self, _origin: Point3, _direction: Vec3) -> PdfValue {
+        0.0
+    }
+
+    /// 从原点生成一个随机方向向量
+    ///
+    /// # 参数
+    ///
+    /// * `origin` - 生成随机方向向量的原点
+    ///
+    /// # 返回值
+    ///
+    /// 一个随机方向向量。
+    fn random(&self, _origin: Point3) -> Vec3 {
+        Vec3::random_unit()
+    }
 }
 
 /// 实现 Hittable Trait 对 Box 类型的支持
@@ -76,6 +113,14 @@ impl<T: Hittable + ?Sized> Hittable for Box<T> {
     fn bounding_box(&self) -> Aabb {
         (**self).bounding_box()
     }
+
+    fn pdf_value(&self, origin: Point3, direction: Vec3) -> PdfValue {
+        (**self).pdf_value(origin, direction)
+    }
+
+    fn random(&self, origin: Point3) -> Vec3 {
+        (**self).random(origin)
+    }
 }
 
 /// 实现 Hittable Trait 对 Arc 类型的支持
@@ -86,5 +131,13 @@ impl<T: Hittable + ?Sized> Hittable for Arc<T> {
 
     fn bounding_box(&self) -> Aabb {
         (**self).bounding_box()
+    }
+
+    fn pdf_value(&self, origin: Point3, direction: Vec3) -> PdfValue {
+        (**self).pdf_value(origin, direction)
+    }
+
+    fn random(&self, origin: Point3) -> Vec3 {
+        (**self).random(origin)
     }
 }

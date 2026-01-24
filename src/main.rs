@@ -15,6 +15,7 @@ fn main() {
     let scene_generator = get_scene(scene_config.scene_type);
     let SceneContext {
         world,
+        lights,
         camera_config,
     } = scene_generator.generate(&scene_config);
 
@@ -44,5 +45,5 @@ fn main() {
         .focus_dist(camera_config.focus_dist)
         .background_color(camera_config.background_color)
         .build();
-    camera.render(world.as_ref(), &mut buffer);
+    camera.render(world.as_ref(), &lights, &mut buffer);
 }

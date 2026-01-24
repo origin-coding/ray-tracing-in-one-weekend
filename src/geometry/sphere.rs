@@ -2,7 +2,8 @@
 
 use crate::geometry::{Aabb, HitRecord, Hittable};
 use crate::material::Material;
-use crate::math::{Interval, Point3, Ray, Vec3};
+use crate::math::{Interval, Onb, PdfValue, Point3, Ray, Vec3};
+use crate::utils::random_double;
 use std::sync::Arc;
 
 /// 球体类型定义，包含球心和半径。
@@ -69,6 +70,19 @@ impl Sphere {
     }
 }
 
+// ... 辅助函数 ...
+fn random_to_sphere(radius: f64, distance_squared: f64) -> Vec3 {
+    let r1 = random_double();
+    let r2 = random_double();
+    let z = 1.0 + r2 * ((1.0 - radius * radius / distance_squared).sqrt() - 1.0);
+
+    let phi = 2.0 * std::f64::consts::PI * r1;
+    let x = phi.cos() * (1.0 - z * z).sqrt();
+    let y = phi.sin() * (1.0 - z * z).sqrt();
+
+    Vec3::new(x, y, z)
+}
+
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, interval: Interval) -> Option<HitRecord<'_>> {
         // 计算当前球体的位置
@@ -107,5 +121,32 @@ impl Hittable for Sphere {
 
     fn bounding_box(&self) -> Aabb {
         self.bounding_box
+    }
+
+    fn pdf_value(&self, origin: Point3, direction: Vec3) -> PdfValue {
+        // 这里的逻辑只适用于静止球体
+        if self
+            .hit(
+                &Ray::new(origin, direction),
+                Interval::new(0.001, f64::INFINITY),
+            )
+            .is_none()
+        {
+            return 0.0;
+        }
+
+        let cos_theta_max = (1.0
+            - self.radius * self.radius / (self.center.origin - origin).length_squared())
+        .sqrt();
+        let solid_angle = 2.0 * std::f64::consts::PI * (1.0 - cos_theta_max);
+
+        1.0 / solid_angle
+    }
+
+    fn random(&self, origin: Point3) -> Vec3 {
+        let direction = self.center.origin - origin;
+        let distance_squared = direction.length_squared();
+        let uvw = Onb::build_from_w(direction);
+        uvw.local_vec(random_to_sphere(self.radius, distance_squared))
     }
 }

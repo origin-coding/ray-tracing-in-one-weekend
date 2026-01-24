@@ -39,6 +39,7 @@ impl Scene for CheckeredScene {
 
         SceneContext {
             world,
+            lights: HittableList::new(),
             camera_config,
         }
     }

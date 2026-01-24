@@ -39,6 +39,7 @@ impl Scene for PerlinScene {
 
         SceneContext {
             world,
+            lights: HittableList::new(),
             camera_config,
         }
     }

@@ -12,6 +12,7 @@ impl Scene for CornellSmokeScene {
     //noinspection DuplicatedCode
     fn generate(&self, _config: &SceneConfig) -> SceneContext {
         let mut world = HittableList::new();
+        let mut lights = HittableList::new();
 
         let material_red = Arc::new(Lambertian::from_color(Color::new(0.65, 0.05, 0.05)));
         let material_white = Arc::new(Lambertian::from_color(Color::new(0.73, 0.73, 0.73)));
@@ -51,12 +52,14 @@ impl Scene for CornellSmokeScene {
             material_white.clone(),
         )));
 
-        world.add(Box::new(Quadrilateral::new(
+        let light = Arc::new(Quadrilateral::new(
             Point3::new(343.0, 554.0, 332.0),
             Vec3::new(-130.0, 0.0, 0.0),
             Vec3::new(0.0, 0.0, -105.0),
             material_light,
-        )));
+        ));
+        world.add(Box::new(light.clone()));
+        lights.add(Box::new(light));
 
         // 添加两个平行四面体，并将其平移 + 旋转
         let box1 = Quadrilateral::create_box(
@@ -91,6 +94,7 @@ impl Scene for CornellSmokeScene {
 
         SceneContext {
             world,
+            lights,
             camera_config,
         }
     }

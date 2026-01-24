@@ -16,6 +16,7 @@ use crate::geometry::HittableList;
 /// 场景上下文，包含场景中的物体和相机配置。
 pub struct SceneContext {
     pub world: HittableList,
+    pub lights: HittableList,
     pub camera_config: CameraConfig,
 }
 

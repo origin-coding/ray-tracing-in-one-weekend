@@ -12,6 +12,7 @@ pub struct LightScene;
 impl Scene for LightScene {
     fn generate(&self, _config: &SceneConfig) -> SceneContext {
         let mut world = HittableList::new();
+        let mut lights = HittableList::new();
 
         let per_text = Arc::new(Noise::new(4.0));
         let per_material = Arc::new(Lambertian::new(per_text));
@@ -28,17 +29,22 @@ impl Scene for LightScene {
         )));
 
         let light_material = Arc::new(DiffuseLight::from_color(Color::new(4.0, 4.0, 4.0)));
-        world.add(Box::new(Sphere::stationary(
+        let light_ball = Arc::new(Sphere::stationary(
             Point3::new(0.0, 7.0, 0.0),
             2.0,
             light_material.clone(),
-        )));
-        world.add(Box::new(Quadrilateral::new(
+        ));
+        world.add(Box::new(light_ball.clone()));
+        lights.add(Box::new(light_ball));
+
+        let light_quad = Arc::new(Quadrilateral::new(
             Point3::new(3.0, 1.0, -2.0),
             Vec3::new(2.0, 0.0, 0.0),
             Vec3::new(0.0, 2.0, 0.0),
             light_material.clone(),
-        )));
+        ));
+        world.add(Box::new(light_quad.clone()));
+        lights.add(Box::new(light_quad));
 
         let camera_config = CameraConfig {
             vfov: 20.0,
@@ -52,6 +58,7 @@ impl Scene for LightScene {
 
         SceneContext {
             world,
+            lights,
             camera_config,
         }
     }

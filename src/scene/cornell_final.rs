@@ -16,6 +16,7 @@ pub struct CornellFinalScene;
 impl Scene for CornellFinalScene {
     fn generate(&self, config: &SceneConfig) -> SceneContext {
         let mut world = HittableList::new();
+        let mut lights = HittableList::new();
 
         // --- 1. 地面盒子矩阵 (Ground Boxes) ---
         let ground = Arc::new(Lambertian::from_color(Color::new(0.48, 0.83, 0.53)));
@@ -49,13 +50,15 @@ impl Scene for CornellFinalScene {
         world.add(BvhNode::from_hittable_list(boxes1));
 
         // --- 2. 顶部光源 (Top Light) ---
-        let light = Arc::new(DiffuseLight::from_color(Color::new(7.0, 7.0, 7.0)));
-        world.add(Box::new(Quadrilateral::new(
+        let light_material = Arc::new(DiffuseLight::from_color(Color::new(7.0, 7.0, 7.0)));
+        let light = Arc::new(Quadrilateral::new(
             Point3::new(123.0, 554.0, 147.0),
             Vec3::new(300.0, 0.0, 0.0),
             Vec3::new(0.0, 0.0, 265.0),
-            light,
-        )));
+            light_material.clone(),
+        ));
+        world.add(Box::new(light.clone()));
+        lights.add(Box::new(light));
 
         // --- 3. 运动的球体 (Moving Sphere) ---
         let center1 = Point3::new(400.0, 400.0, 200.0);
@@ -170,6 +173,7 @@ impl Scene for CornellFinalScene {
 
         SceneContext {
             world,
+            lights,
             camera_config,
         }
     }

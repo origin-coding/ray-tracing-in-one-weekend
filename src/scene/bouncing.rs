@@ -27,6 +27,7 @@ impl Scene for BouncingScene {
 
         SceneContext {
             world,
+            lights: HittableList::new(),
             camera_config,
         }
     }

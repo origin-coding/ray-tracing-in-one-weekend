@@ -59,6 +59,7 @@ impl Scene for QuadScene {
 
         SceneContext {
             world,
+            lights: HittableList::new(),
             camera_config,
         }
     }
