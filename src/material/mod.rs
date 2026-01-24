@@ -7,13 +7,28 @@ mod lambertian;
 mod metal;
 
 use crate::geometry::HitRecord;
-use crate::math::{Color, PdfValue, Point3, Ray};
+use crate::math::{Color, Point3, Ray};
 
+use crate::sampling::Pdf;
 pub use dielectric::Dielectric;
 pub use diffuse_light::DiffuseLight;
 pub use isotropic::Isotropic;
 pub use lambertian::Lambertian;
 pub use metal::Metal;
+
+/// 散射记录，用于描述光线与物体交互后的结果
+pub enum ScatterRecord {
+    /// 镜面反射 (Specular)
+    /// 比如金属、玻璃。这种类型不需要进行混合概率采样 (PDF)。
+    Specular { attenuation: Color, ray: Ray },
+
+    /// 漫反射 (Diffuse)
+    /// 比如亚光材质、体积雾。这种类型需要提供一个 PDF 对象来进行重要性采样。
+    Diffuse {
+        attenuation: Color,
+        pdf: Box<dyn Pdf + Send + Sync>,
+    },
+}
 
 /// 材质定义
 pub trait Material {
@@ -27,7 +42,7 @@ pub trait Material {
     /// # 返回值
     ///
     /// 如果散射成功，返回散射后的颜色和光线；否则返回 None。
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray, Option<PdfValue>)>;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<ScatterRecord>;
 
     /// 计算材质在点 p 上的发光颜色。
     ///
@@ -41,20 +56,5 @@ pub trait Material {
     /// 点 p 上的发光颜色。
     fn emitted(&self, _uv: (f64, f64), _p: &Point3, _r_in: &Ray, _rec: &HitRecord<'_>) -> Color {
         Color::zero()
-    }
-
-    /// 计算材质在点 p 上的散射概率密度函数（PDF）。
-    ///
-    /// # 参数
-    ///
-    /// * `r_in` - 入射光线
-    /// * `rec` - 碰撞记录
-    /// * `scattered` - 散射后的光线
-    ///
-    /// # 返回值
-    ///
-    /// 材质在点 p 上的散射概率密度函数值。
-    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord<'_>, _scattered: &Ray) -> PdfValue {
-        0.0
     }
 }

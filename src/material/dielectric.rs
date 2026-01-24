@@ -1,5 +1,5 @@
 use crate::geometry::HitRecord;
-use crate::material::{Material, PdfValue};
+use crate::material::{Material, ScatterRecord};
 use crate::math::{Color, Ray};
 use crate::utils::random_double;
 
@@ -26,7 +26,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<(Color, Ray, Option<PdfValue>)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<ScatterRecord> {
         let attenuation = Color::one();
         let ri = if rec.front_face {
             1.0 / self.refraction_index
@@ -46,6 +46,9 @@ impl Material for Dielectric {
         };
 
         let scattered = Ray::new_with_time(rec.p, direction, r_in.time);
-        Some((attenuation, scattered, None))
+        Some(ScatterRecord::Specular {
+            attenuation,
+            ray: scattered,
+        })
     }
 }

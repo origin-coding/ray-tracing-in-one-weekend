@@ -1,8 +1,9 @@
 //! 相机和Builder的定义以及相关工具方法。
 
 use crate::geometry::Hittable;
-use crate::math::{Color, Interval, Point3, Ray, Vec3, color::write_color};
-use crate::sampling::{CosinePdf, HittablePdf, MixturePdf, Pdf};
+use crate::material::ScatterRecord;
+use crate::math::{color::write_color, Color, Interval, Point3, Ray, Vec3};
+use crate::sampling::{HittablePdf, MixturePdf, Pdf};
 use crate::utils::random_double;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
@@ -223,32 +224,33 @@ impl Camera {
         let emitted = rec.mat.emitted(rec.uv, &rec.p, &r, &rec);
 
         // 如果材质没有散射，那么直接返回自发光颜色
-        let Some((attenuation, scattered, pdf_opt)) = rec.mat.scatter(&r, &rec) else {
+        let Some(scatter_record) = rec.mat.scatter(&r, &rec) else {
             return emitted;
         };
 
         // 计算散射后的光线颜色 (递归)
-        let color_from_scatter = match pdf_opt {
-            Some(_) => {
+        let color_from_scatter = match scatter_record {
+            ScatterRecord::Specular { attenuation, ray } => {
+                attenuation * self.ray_color(ray, world, lights, depth - 1)
+            }
+
+            ScatterRecord::Diffuse { attenuation, pdf } => {
                 let light_pdf = HittablePdf::new(lights, rec.p);
-                let surface_pdf = CosinePdf::new(rec.normal);
-                let mixture_pdf = MixturePdf::new(&light_pdf, &surface_pdf);
+                let mixture_pdf = MixturePdf::new(&light_pdf, pdf.as_ref());
 
                 let scattered = Ray::new_with_time(rec.p, mixture_pdf.generate(), r.time);
                 let pdf_value = mixture_pdf.value(scattered.direction);
 
-                let scattering_pdf = rec.mat.scattering_pdf(&r, &rec, &scattered);
-                // 这里的递归放在后面
+                let scattering_pdf = pdf.value(scattered.direction);
+
                 let li = self.ray_color(scattered, world, lights, depth - 1);
 
                 if pdf_value > 0.0 {
-                    (attenuation * scattering_pdf * li) / pdf_value
+                    attenuation * li * scattering_pdf / pdf_value
                 } else {
                     Color::zero()
                 }
             }
-
-            None => attenuation * self.ray_color(scattered, world, lights, depth - 1),
         };
 
         // 返回最终得到的颜色

@@ -1,7 +1,6 @@
 //! 可碰撞物体列表
 use crate::geometry::{Aabb, HitRecord, Hittable};
 use crate::math::{Interval, PdfValue, Point3, Ray, Vec3};
-use crate::utils::random_double;
 
 pub struct HittableList {
     pub bounding_box: Aabb,
@@ -72,10 +71,8 @@ impl Hittable for HittableList {
         }
 
         // 随机选择一个物体进行采样
-        // 使用 ((random_double() * len) as usize) 来生成 0 到 len-1 的索引
-        let index = (random_double() * objects_len as f64) as usize;
-        // 防止浮点误差导致的越界（虽然极罕见）
-        let index = index.min(objects_len - 1);
+        use rand::Rng;
+        let index = rand::rng().random_range(0..objects_len);
 
         self.objects[index].random(origin)
     }

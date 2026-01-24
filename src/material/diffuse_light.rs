@@ -1,5 +1,5 @@
 use crate::geometry::HitRecord;
-use crate::material::{Material, PdfValue};
+use crate::material::{Material, ScatterRecord};
 use crate::math::{Color, Point3, Ray};
 use crate::texture::{SolidColor, Texture};
 use std::sync::Arc;
@@ -39,7 +39,7 @@ impl DiffuseLight {
 }
 
 impl Material for DiffuseLight {
-    fn scatter(&self, _: &Ray, _: &HitRecord<'_>) -> Option<(Color, Ray, Option<PdfValue>)> {
+    fn scatter(&self, _: &Ray, _: &HitRecord<'_>) -> Option<ScatterRecord> {
         None
     }
 
