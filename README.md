@@ -3,8 +3,13 @@
 [![Rust](https://img.shields.io/badge/language-Rust-orange.svg)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-这是一个使用 **Rust** 语言实现的光线追踪器。本项目完整实现了 Peter Shirley 的经典光线追踪教程系列《Ray Tracing in One
-Weekend》和《Ray Tracing: The Next Week》，并利用 Rust 的语言特性进行了工程化和性能优化。
+这是一个使用 **Rust** 语言实现的光线追踪器。本项目完整实现了 Peter Shirley 的经典光线追踪教程系列三部曲：
+
+1. 《Ray Tracing in One Weekend》
+2. 《Ray Tracing: The Next Week》
+3. 《Ray Tracing: The Rest of Your Life》
+
+利用 Rust 的语言特性（如 Trait 系统、枚举分发）进行了工程化重构，并实现了基于 **Monte Carlo** 的混合概率密度采样。
 
 ## 🖼️ 最终渲染结果
 
@@ -20,6 +25,14 @@ Weekend》和《Ray Tracing: The Next Week》，并利用 Rust 的语言特性�
 - **多重采样抗锯齿（MSAA）**：通过对每个像素进行多次随机采样，减少了 aliasing 现象，提升了图像质量。
 - **Gamma 校正**：在输出图像前对颜色进行 gamma 校正，确保显示在屏幕上的颜色与预期一致。
 - **BVH 加速支持**：利用层次包围盒（Bounding Volume Hierarchy）对场景中的物体进行加速，显著提高了渲染效率。
+
+### 📚 数学与采样 (Monte Carlo & Sampling)
+
+- **概率密度函数 (PDF)**：抽象了 `Pdf` Trait，实现了余弦密度（Cosine）、球形均匀（Sphere）和物体表面（Hittable）等多种概率模型。
+- **重要性采样 (Importance Sampling)**：实现了对光源的显式采样，在相同 SPP 下大幅降低了画面噪点。
+- **混合密度估计 (Mixture Density)**：通过 `MixturePdf` 实现了多策略混合采样（如 50% 采样光源 + 50% 采样材质表面），兼顾了高光反射和软阴影的物理正确性。
+- **正交基 (ONB)**：实现了基于法线的局部坐标系构建，用于处理复杂的散射方向计算。
+- **散射架构重构**：引入 `ScatterRecord` 枚举，清晰分离了镜面反射（Specular，无 PDF）和漫反射（Diffuse，有 PDF）的逻辑路径。
 
 ### 几何体与材质
 
@@ -94,7 +107,8 @@ $env:RAYON_NUM_THREADS=8; cargo run --release -- --scene cornell-final --image-t
 ```
 
 > **⚠️ 高负载预警**：
-> 上述配置属于极端质量设置。作为参考，在 **Intel Core Ultra 7 255H (共 16 核心，使用 8 线程)** 处理器上，该渲染任务需要 **数小时**
+> 上述配置属于极端质量设置。作为参考，在 **Intel Core Ultra 7 255H (共 16 核心，使用 8 线程)** 处理器上，该渲染任务需要 *
+*数小时**
 > 才能完成。请做好长时间运行的心理准备，并确保设备散热良好。
 
 ## 🚀 并发控制与性能 (Concurrency & Performance)
@@ -143,6 +157,7 @@ set RAYON_NUM_THREADS=4 && cargo run --release -- -o image.ppm
 
 * [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
 * [_Ray Tracing: The Next Week_](https://raytracing.github.io/books/RayTracingTheNextWeek.html)
+* [_Ray Tracing: The Rest of Your Life_](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)
 
 ## 📝 许可证
 
