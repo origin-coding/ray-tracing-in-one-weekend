@@ -2,7 +2,10 @@
 
 use crate::geometry::Hittable;
 use crate::material::ScatterRecord;
-use crate::math::{color::write_color, Color, Interval, Point3, Ray, Vec3};
+use crate::math::{
+    color::{write_color_p3, write_color_p6}, Color, Interval, Point3, Ray,
+    Vec3,
+};
 use crate::sampling::{HittablePdf, MixturePdf, Pdf};
 use crate::utils::random_double;
 use rayon::iter::ParallelIterator;
@@ -30,6 +33,7 @@ pub struct CameraBuilder {
     defocus_angle: f64,
     focus_dist: f64,
     background_color: Color,
+    use_ascii: bool,
 }
 
 impl Default for CameraBuilder {
@@ -46,6 +50,7 @@ impl Default for CameraBuilder {
             defocus_angle: 0.0,
             focus_dist: 10.0,
             background_color: Color::zero(),
+            use_ascii: false,
         }
     }
 }
@@ -106,6 +111,11 @@ impl CameraBuilder {
         self
     }
 
+    pub fn use_ascii(mut self, use_ascii: bool) -> Self {
+        self.use_ascii = use_ascii;
+        self
+    }
+
     pub fn build(self) -> Camera {
         // 计算画布高度
         let image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
@@ -163,6 +173,7 @@ impl CameraBuilder {
             defocus_disk_u,
             defocus_disk_v,
             background_color: self.background_color,
+            use_ascii: self.use_ascii,
         }
     }
 }
@@ -193,10 +204,12 @@ pub struct Camera {
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
     background_color: Color,
+    use_ascii: bool,
 }
 
 impl Camera {
     const P3_MAGIC_NUMBER: &str = "P3";
+    const P6_MAGIC_NUMBER: &str = "P6";
     const MAX_COLOR_VALUE: i32 = 255;
 
     /// 计算一条射线的颜色。
@@ -309,11 +322,17 @@ impl Camera {
         lights: &(dyn Hittable + Send + Sync),
         out: &mut impl Write,
     ) {
+        let magic_number = if self.use_ascii {
+            Self::P3_MAGIC_NUMBER
+        } else {
+            Self::P6_MAGIC_NUMBER
+        };
+
         // 开始渲染
         writeln!(
             out,
             "{}\n{} {}\n{}",
-            Self::P3_MAGIC_NUMBER,
+            magic_number,
             self.image_width,
             self.image_height,
             Self::MAX_COLOR_VALUE
@@ -355,7 +374,11 @@ impl Camera {
         // 2. 串行输出阶段
         for row in scan_lines {
             for color in row {
-                write_color(out, color).expect("Failed to write color to writer");
+                if self.use_ascii {
+                    write_color_p3(out, color).expect("Failed to write color to writer");
+                } else {
+                    write_color_p6(out, color).expect("Failed to write color to writer");
+                }
             }
         }
 

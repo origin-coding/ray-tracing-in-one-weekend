@@ -1,7 +1,7 @@
 //! 柏林噪声算法实现。
 
 use crate::math::{Point3, Vec3};
-use rand::prelude::SliceRandom;
+use rand::prelude::{SeedableRng, SliceRandom, SmallRng};
 
 /// 柏林噪声类。
 pub struct Perlin {
@@ -19,15 +19,17 @@ impl Perlin {
 
     /// 创建一个新的柏林噪声实例。
     pub fn new() -> Self {
+        let mut rng = SmallRng::from_os_rng();
+
         // 生成随机向量数组
         let mut random_vec = Vec::with_capacity(Self::POINT_COUNT);
         for _ in 0..Self::POINT_COUNT {
             random_vec.push(Vec3::random_range(-1.0, 1.0).unit_vector());
         }
 
-        let perm_x = Self::perlin_generate_perm();
-        let perm_y = Self::perlin_generate_perm();
-        let perm_z = Self::perlin_generate_perm();
+        let perm_x = Self::perlin_generate_perm(&mut rng);
+        let perm_y = Self::perlin_generate_perm(&mut rng);
+        let perm_z = Self::perlin_generate_perm(&mut rng);
 
         Self {
             random_vec,
@@ -38,13 +40,13 @@ impl Perlin {
     }
 
     /// 生成随机索引数组。
-    fn perlin_generate_perm() -> Vec<usize> {
+    fn perlin_generate_perm(rng: &mut SmallRng) -> Vec<usize> {
         let mut p = Vec::with_capacity(Self::POINT_COUNT);
         for i in 0..Self::POINT_COUNT {
             p.push(i);
         }
         // 打乱数组
-        p.shuffle(&mut rand::rng());
+        p.shuffle(rng);
         p
     }
 

@@ -2,6 +2,7 @@
 
 use crate::math::{PdfValue, Vec3};
 use crate::sampling::Pdf;
+use crate::utils::random_double;
 
 /// 混合 PDF 实现。
 pub struct MixturePdf<'a> {
@@ -31,7 +32,7 @@ impl Pdf for MixturePdf<'_> {
     }
 
     fn generate(&self) -> Vec3 {
-        if rand::random::<bool>() {
+        if random_double() < 0.5 {
             self.p0.generate()
         } else {
             self.p1.generate()

@@ -2,6 +2,7 @@
 
 use crate::geometry::{Aabb, HitRecord, Hittable, HittableList};
 use crate::math::{Interval, Ray};
+use rand::prelude::{Rng, SeedableRng, SmallRng};
 use std::cmp::Ordering;
 
 pub struct BvhNode {
@@ -15,7 +16,9 @@ impl BvhNode {
     pub fn new(
         mut objects: Vec<Box<dyn Hittable + Send + Sync>>,
     ) -> Box<dyn Hittable + Send + Sync> {
-        let axis = rand::random_range(0..=2);
+        let mut rng = SmallRng::from_os_rng();
+
+        let axis = rng.random_range(0..=2);
         let comparator = |a: &Box<dyn Hittable + Send + Sync>,
                           b: &Box<dyn Hittable + Send + Sync>| {
             let box_a = a.bounding_box();

@@ -48,6 +48,14 @@ pub struct RenderConfig {
         default_value = "image.ppm"
     )]
     pub output_path: PathBuf,
+
+    #[arg(
+        short = 'i',
+        long = "ascii",
+        help = "Output in PPM P3 (ASCII) format instead of P6 (Binary)",
+        default_value_t = false
+    )]
+    pub use_ascii: bool,
 }
 
 /// 渲染场景选项，包含跳跃小球，点格球和一个地球。

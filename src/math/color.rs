@@ -11,7 +11,7 @@ pub type Color = Vec3;
 const INTENSITY: Interval = Interval::new(0.0, 0.999);
 
 /// 将颜色输出到流中。
-pub fn write_color<W: Write>(out: &mut W, color: Color) -> std::io::Result<()> {
+pub fn write_color_p3<W: Write>(out: &mut W, color: Color) -> std::io::Result<()> {
     // 获取 r, g, b (假设 Vec3 的 x, y, z 对应 r, g, b)
     let r = linear_to_gamma(color.x);
     let g = linear_to_gamma(color.y);
@@ -24,6 +24,22 @@ pub fn write_color<W: Write>(out: &mut W, color: Color) -> std::io::Result<()> {
 
     // 使用 writeln! 宏写入流中
     writeln!(out, "{} {} {}", ir, ig, ib)?;
+
+    Ok(())
+}
+
+pub fn write_color_p6<W: Write>(out: &mut W, color: Color) -> std::io::Result<()> {
+    // 获取 r, g, b (假设 Vec3 的 x, y, z 对应 r, g, b)
+    let r = linear_to_gamma(color.x);
+    let g = linear_to_gamma(color.y);
+    let b = linear_to_gamma(color.z);
+
+    // 将 [0,1] 转换为 [0,255]
+    let ir = (INTENSITY.clamp(r) * 255.999) as u8;
+    let ig = (INTENSITY.clamp(g) * 255.999) as u8;
+    let ib = (INTENSITY.clamp(b) * 255.999) as u8;
+
+    out.write_all(&[ir, ig, ib])?;
 
     Ok(())
 }

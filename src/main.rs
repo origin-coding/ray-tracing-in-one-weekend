@@ -44,6 +44,7 @@ fn main() {
         .defocus_angle(camera_config.defocus_angle)
         .focus_dist(camera_config.focus_dist)
         .background_color(camera_config.background_color)
+        .use_ascii(render_config.use_ascii)
         .build();
     camera.render(world.as_ref(), &lights, &mut buffer);
 }
