@@ -12,7 +12,7 @@ pub type Point3 = Vec3;
 pub struct Ray {
     pub origin: Point3,
     pub direction: Vec3,
-    pub time: f64,
+    pub time: f32,
 }
 
 impl Ray {
@@ -28,7 +28,7 @@ impl Ray {
 
     /// 创建一个新的光线实例，包含时间参数。
     #[inline]
-    pub fn new_with_time(origin: Point3, direction: Vec3, time: f64) -> Self {
+    pub fn new_with_time(origin: Point3, direction: Vec3, time: f32) -> Self {
         Self {
             origin,
             direction,
@@ -38,7 +38,7 @@ impl Ray {
 
     /// 计算光线在 t 时刻到达的位置。
     #[inline]
-    pub fn at(&self, t: f64) -> Point3 {
+    pub fn at(&self, t: f32) -> Point3 {
         self.origin + t * self.direction
     }
 }

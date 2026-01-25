@@ -2,7 +2,7 @@
 
 use crate::geometry::Aabb;
 use crate::material::Material;
-use crate::math::{Interval, PdfValue, Point3, Ray, Vec3};
+use crate::math::{Interval, PdfValue, Point3, Ray, Vec3, Vec3Ext};
 use std::sync::Arc;
 
 /// 碰撞记录
@@ -12,13 +12,13 @@ pub struct HitRecord<'a> {
     /// 碰撞点对应的法线向量
     pub normal: Vec3,
     /// 碰撞时间
-    pub t: f64,
+    pub t: f32,
     /// 碰撞点是否在物体的正前面
     pub front_face: bool,
     /// 碰撞时的材质
     pub mat: &'a dyn Material,
     /// 碰撞点对应的纹理坐标
-    pub uv: (f64, f64),
+    pub uv: (f32, f32),
 }
 
 impl<'a> HitRecord<'a> {
@@ -34,8 +34,8 @@ impl<'a> HitRecord<'a> {
     pub fn new(
         p: Point3,
         output_normal: Vec3,
-        t: f64,
-        uv: (f64, f64),
+        t: f32,
+        uv: (f32, f32),
         ray: &Ray,
         mat: &'a dyn Material,
     ) -> Self {

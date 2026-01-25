@@ -43,9 +43,9 @@ impl Material for DiffuseLight {
         None
     }
 
-    fn emitted(&self, uv: (f64, f64), p: &Point3, _r_in: &Ray, rec: &HitRecord<'_>) -> Color {
+    fn emitted(&self, uv: (f32, f32), p: &Point3, _r_in: &Ray, rec: &HitRecord<'_>) -> Color {
         if !rec.front_face {
-            Color::zero()
+            Color::ZERO
         } else {
             self.texture.value(uv, p)
         }

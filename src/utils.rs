@@ -9,19 +9,19 @@ thread_local! {
 
 /// 生成一个 [0,1) 之间的随机浮点数。
 #[inline]
-pub fn random_double() -> f64 {
+pub fn random_float() -> f32 {
     RNG.with(|rng| rng.borrow_mut().random_range(0.0..1.0))
 }
 
 /// 生成一个 [min,max) 之间的随机浮点数。
 #[inline]
-pub fn random_double_range(min: f64, max: f64) -> f64 {
+pub fn random_float_range(min: f32, max: f32) -> f32 {
     RNG.with(|rng| rng.borrow_mut().random_range(min..max))
 }
 
 /// 生成一个 [min,max] 之间的随机浮点数。
 #[inline]
-pub fn random_double_range_inclusive(min: f64, max: f64) -> f64 {
+pub fn random_float_range_inclusive(min: f32, max: f32) -> f32 {
     RNG.with(|rng| rng.borrow_mut().random_range(min..=max))
 }
 
@@ -35,7 +35,7 @@ pub fn random_usize_range(min: usize, max: usize) -> usize {
 
 /// 将线性空间的分量转换为 gamma 空间的分量。
 #[inline]
-pub fn linear_to_gamma(linear_component: f64) -> f64 {
+pub fn linear_to_gamma(linear_component: f32) -> f32 {
     if linear_component >= 0.0 {
         linear_component.sqrt()
     } else {

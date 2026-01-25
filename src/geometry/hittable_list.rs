@@ -55,7 +55,7 @@ impl Hittable for HittableList {
             return 0.0;
         }
 
-        let weight = 1.0 / objects_len as f64;
+        let weight = 1.0 / objects_len as f32;
         let mut sum = 0.0;
 
         for object in &self.objects {

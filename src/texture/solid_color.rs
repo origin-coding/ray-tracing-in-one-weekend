@@ -33,13 +33,13 @@ impl SolidColor {
     /// # Returns
     ///
     /// 新的纯色纹理。
-    pub fn from_rgb(r: f64, g: f64, b: f64) -> Self {
+    pub fn from_rgb(r: f32, g: f32, b: f32) -> Self {
         Self::new(Color::new(r, g, b))
     }
 }
 
 impl Texture for SolidColor {
-    fn value(&self, _uv: (f64, f64), _p: &Point3) -> Color {
+    fn value(&self, _uv: (f32, f32), _p: &Point3) -> Color {
         self.albedo
     }
 }

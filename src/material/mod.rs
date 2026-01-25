@@ -54,7 +54,7 @@ pub trait Material {
     /// # 返回值
     ///
     /// 点 p 上的发光颜色。
-    fn emitted(&self, _uv: (f64, f64), _p: &Point3, _r_in: &Ray, _rec: &HitRecord<'_>) -> Color {
-        Color::zero()
+    fn emitted(&self, _uv: (f32, f32), _p: &Point3, _r_in: &Ray, _rec: &HitRecord<'_>) -> Color {
+        Color::ZERO
     }
 }

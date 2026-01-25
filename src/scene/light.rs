@@ -52,7 +52,7 @@ impl Scene for LightScene {
             look_at: Point3::new(0.0, 2.0, 0.0),
             up: Vec3::new(0.0, 1.0, 0.0),
             defocus_angle: 0.0,
-            background_color: Color::zero(),
+            background_color: Color::ZERO,
             ..Default::default()
         };
 

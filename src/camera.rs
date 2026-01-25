@@ -3,11 +3,11 @@
 use crate::geometry::Hittable;
 use crate::material::ScatterRecord;
 use crate::math::{
-    color::{write_color_p3, write_color_p6}, Color, Interval, Point3, Ray,
-    Vec3,
+    Color, Interval, Point3, Ray, Vec3, Vec3Ext,
+    color::{write_color_p3, write_color_p6},
 };
 use crate::sampling::{HittablePdf, MixturePdf, Pdf};
-use crate::utils::random_double;
+use crate::utils::random_float;
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelIterator;
 use std::io::Write;
@@ -22,16 +22,16 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 /// /// camera.xxx()
 /// ```
 pub struct CameraBuilder {
-    aspect_ratio: f64,
+    aspect_ratio: f32,
     image_width: i32,
     samples_per_pixel: i32,
     max_depth: i32,
-    vfov: f64,
+    vfov: f32,
     look_from: Point3,
     look_at: Point3,
     up: Vec3,
-    defocus_angle: f64,
-    focus_dist: f64,
+    defocus_angle: f32,
+    focus_dist: f32,
     background_color: Color,
     use_ascii: bool,
 }
@@ -44,19 +44,19 @@ impl Default for CameraBuilder {
             samples_per_pixel: 100,
             max_depth: 10,
             vfov: 90.0,
-            look_from: Point3::zero(),
-            look_at: -Point3::unit_z(),
-            up: Vec3::unit_y(),
+            look_from: Point3::ZERO,
+            look_at: -Point3::Z,
+            up: Vec3::Y,
             defocus_angle: 0.0,
             focus_dist: 10.0,
-            background_color: Color::zero(),
+            background_color: Color::ZERO,
             use_ascii: false,
         }
     }
 }
 
 impl CameraBuilder {
-    pub fn aspect_ratio(mut self, aspect_ratio: f64) -> Self {
+    pub fn aspect_ratio(mut self, aspect_ratio: f32) -> Self {
         self.aspect_ratio = aspect_ratio;
         self
     }
@@ -76,7 +76,7 @@ impl CameraBuilder {
         self
     }
 
-    pub fn vfov(mut self, vfov: f64) -> Self {
+    pub fn vfov(mut self, vfov: f32) -> Self {
         self.vfov = vfov;
         self
     }
@@ -96,12 +96,12 @@ impl CameraBuilder {
         self
     }
 
-    pub fn defocus_angle(mut self, defocus_angle: f64) -> Self {
+    pub fn defocus_angle(mut self, defocus_angle: f32) -> Self {
         self.defocus_angle = defocus_angle;
         self
     }
 
-    pub fn focus_dist(mut self, focus_dist: f64) -> Self {
+    pub fn focus_dist(mut self, focus_dist: f32) -> Self {
         self.focus_dist = focus_dist;
         self
     }
@@ -118,7 +118,7 @@ impl CameraBuilder {
 
     pub fn build(self) -> Camera {
         // 计算画布高度
-        let image_height = (self.image_width as f64 / self.aspect_ratio) as i32;
+        let image_height = (self.image_width as f32 / self.aspect_ratio) as i32;
         let image_height = if image_height < 1 { 1 } else { image_height };
 
         // 计算视窗宽高
@@ -126,12 +126,12 @@ impl CameraBuilder {
         let h = (theta / 2.0).tan();
 
         let viewport_height = 2.0 * h * self.focus_dist;
-        let viewport_width = viewport_height * (self.image_width as f64 / image_height as f64);
+        let viewport_width = viewport_height * (self.image_width as f32 / image_height as f32);
         let center = self.look_from;
 
         // 计算相机的 w u v 坐标单位向量
-        let w = (self.look_from - self.look_at).unit_vector();
-        let u = Vec3::cross(self.up, w).unit_vector();
+        let w = (self.look_from - self.look_at).normalize();
+        let u = Vec3::cross(self.up, w).normalize();
         let v = Vec3::cross(w, u);
 
         // 计算视窗边缘的向量
@@ -139,8 +139,8 @@ impl CameraBuilder {
         let viewport_v = viewport_height * -v;
 
         // 计算每个像素的 Delta 向量
-        let pixel_delta_u = viewport_u / self.image_width as f64;
-        let pixel_delta_v = viewport_v / image_height as f64;
+        let pixel_delta_u = viewport_u / self.image_width as f32;
+        let pixel_delta_v = viewport_v / image_height as f32;
 
         // 计算图像左上角的坐标
         let viewport_up_left = center - (self.focus_dist * w) - viewport_u / 2.0 - viewport_v / 2.0;
@@ -152,8 +152,8 @@ impl CameraBuilder {
         let defocus_disk_v = v * defocus_radius;
 
         // 计算 sqrt_spp 和 recip_sqrt_spp
-        let sqrt_spp = (self.samples_per_pixel as f64).sqrt() as i32;
-        let recip_sqrt_spp = 1.0 / (sqrt_spp as f64);
+        let sqrt_spp = (self.samples_per_pixel as f32).sqrt() as i32;
+        let recip_sqrt_spp = 1.0 / (sqrt_spp as f32);
 
         Camera {
             aspect_ratio: self.aspect_ratio,
@@ -168,7 +168,7 @@ impl CameraBuilder {
             pixel_00_loc,
             pixel_delta_u,
             pixel_delta_v,
-            samples_per_scale: 1.0 / ((sqrt_spp * sqrt_spp) as f64), // 每个像素的样本数缩放比例，按照实际样本数的平方根来缩放
+            samples_per_scale: 1.0 / ((sqrt_spp * sqrt_spp) as f32), // 每个像素的样本数缩放比例，按照实际样本数的平方根来缩放
             defocus_angle: self.defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
@@ -187,20 +187,20 @@ impl CameraBuilder {
 /// ```
 #[allow(dead_code)]
 pub struct Camera {
-    aspect_ratio: f64,
+    aspect_ratio: f32,
     image_width: i32,
     samples_per_pixel: i32,
     sqrt_spp: i32,
-    recip_sqrt_spp: f64,
+    recip_sqrt_spp: f32,
     max_depth: i32,
-    vfov: f64,
+    vfov: f32,
     image_height: i32,
     center: Point3,
     pixel_00_loc: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
-    samples_per_scale: f64,
-    defocus_angle: f64,
+    samples_per_scale: f32,
+    defocus_angle: f32,
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
     background_color: Color,
@@ -225,11 +225,11 @@ impl Camera {
     fn ray_color(&self, r: Ray, world: &dyn Hittable, lights: &dyn Hittable, depth: i32) -> Color {
         // 如果递归深度为 0，那么返回黑色
         if depth <= 0 {
-            return Color::zero();
+            return Color::ZERO;
         }
 
         // 如果没有命中任何物体，返回背景颜色
-        let Some(rec) = world.hit(&r, Interval::new(0.001, f64::INFINITY)) else {
+        let Some(rec) = world.hit(&r, Interval::new(0.001, f32::INFINITY)) else {
             return self.background_color;
         };
 
@@ -261,7 +261,7 @@ impl Camera {
                 if pdf_value > 0.0 {
                     attenuation * li * scattering_pdf / pdf_value
                 } else {
-                    Color::zero()
+                    Color::ZERO
                 }
             }
         };
@@ -283,8 +283,8 @@ impl Camera {
     fn get_ray(&self, x: i32, y: i32, s_i: i32, s_j: i32) -> Ray {
         let offset = self.sample_square_stratified(s_i, s_j);
         let pixel_center = self.pixel_00_loc
-            + (x as f64 + offset.x) * self.pixel_delta_u
-            + (y as f64 + offset.y) * self.pixel_delta_v;
+            + (x as f32 + offset.x) * self.pixel_delta_u
+            + (y as f32 + offset.y) * self.pixel_delta_v;
 
         let ray_direction = pixel_center - self.center;
         let ray_origin = if self.defocus_angle <= 0.0 {
@@ -293,15 +293,15 @@ impl Camera {
             self.defocus_disk_sample()
         };
 
-        let ray_time = random_double();
+        let ray_time = random_float();
 
         Ray::new_with_time(ray_origin, ray_direction, ray_time)
     }
 
     fn sample_square_stratified(&self, s_i: i32, s_j: i32) -> Vec3 {
         // 计算每个样本的偏移量，范围 [-0.5, 0.5]
-        let x = ((s_i as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
-        let y = ((s_j as f64 + random_double()) * self.recip_sqrt_spp) - 0.5;
+        let x = ((s_i as f32 + random_float()) * self.recip_sqrt_spp) - 0.5;
+        let y = ((s_j as f32 + random_float()) * self.recip_sqrt_spp) - 0.5;
         Vec3::new(x, y, 0.0)
     }
 
@@ -357,7 +357,7 @@ impl Camera {
                 let mut row = Vec::with_capacity(self.image_width as usize);
                 for x in 0..self.image_width {
                     // 生成多条射线，对得到的颜色取平均值
-                    let mut color = Color::zero();
+                    let mut color = Color::ZERO;
                     for s_j in 0..self.sqrt_spp {
                         for s_i in 0..self.sqrt_spp {
                             let ray = self.get_ray(x, y, s_i, s_j);

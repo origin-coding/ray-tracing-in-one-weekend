@@ -4,7 +4,7 @@ use crate::geometry::{Aabb, HitRecord, Hittable};
 use crate::material::{Isotropic, Material};
 use crate::math::{Color, Interval, Ray, Vec3};
 use crate::texture::SolidColor;
-use crate::utils::random_double;
+use crate::utils::random_float;
 use std::sync::Arc;
 
 /// 常量介质。
@@ -12,7 +12,7 @@ use std::sync::Arc;
 /// 常量介质是一个在空间中均匀分布的介质，其密度是一个常量。
 pub struct ConstantMedium {
     hittable: Arc<dyn Hittable + Send + Sync>,
-    neg_inv_density: f64,
+    neg_inv_density: f32,
     phase_function: Arc<dyn Material + Send + Sync>,
 }
 
@@ -30,7 +30,7 @@ impl ConstantMedium {
     /// 新的常量介质。
     pub fn new(
         hittable: Arc<dyn Hittable + Send + Sync>,
-        density: f64,
+        density: f32,
         phase_function: Arc<dyn Material + Send + Sync>,
     ) -> Self {
         Self {
@@ -53,7 +53,7 @@ impl ConstantMedium {
     /// 新的常量介质。
     pub fn new_with_color(
         hittable: Arc<dyn Hittable + Send + Sync>,
-        density: f64,
+        density: f32,
         color: Color,
     ) -> Self {
         Self::new(
@@ -69,7 +69,7 @@ impl Hittable for ConstantMedium {
         let mut rec1 = self.hittable.hit(r, Interval::UNIVERSE)?;
         let mut rec2 = self
             .hittable
-            .hit(r, Interval::new(rec1.t + 0.0001, f64::INFINITY))?;
+            .hit(r, Interval::new(rec1.t + 0.0001, f32::INFINITY))?;
 
         rec1.t = interval.min.max(rec1.t);
         rec2.t = interval.max.min(rec2.t);
@@ -82,7 +82,7 @@ impl Hittable for ConstantMedium {
 
         let ray_length = r.direction.length();
         let distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
-        let hit_distance = self.neg_inv_density * random_double().ln();
+        let hit_distance = self.neg_inv_density * random_float().ln();
 
         if hit_distance > distance_inside_boundary {
             return None;
@@ -91,7 +91,7 @@ impl Hittable for ConstantMedium {
         let time = rec1.t + hit_distance / ray_length;
         let rec = HitRecord::new(
             r.at(time),
-            Vec3::unit_x(), // 任意的法线向量都可以，因为常量介质是均匀分布的
+            Vec3::X, // 任意的法线向量都可以，因为常量介质是均匀分布的
             time,
             (0.0, 0.0),
             r,

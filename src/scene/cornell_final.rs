@@ -3,10 +3,10 @@ use crate::geometry::{
     BvhNode, ConstantMedium, HittableList, Quadrilateral, RotateY, Sphere, Translate,
 };
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
-use crate::math::{Color, Point3, Vec3};
+use crate::math::{Color, Point3, Vec3, Vec3Ext};
 use crate::scene::{Scene, SceneContext};
 use crate::texture::{Image, Noise};
-use crate::utils::random_double_range;
+use crate::utils::random_float_range;
 use std::sync::Arc;
 
 /// 《Ray Tracing: The Next Week》最终场景
@@ -27,11 +27,11 @@ impl Scene for CornellFinalScene {
         for i in 0..boxes_per_side {
             for j in 0..boxes_per_side {
                 let w = 100.0;
-                let x0 = -1000.0 + i as f64 * w;
-                let z0 = -1000.0 + j as f64 * w;
+                let x0 = -1000.0 + i as f32 * w;
+                let z0 = -1000.0 + j as f32 * w;
                 let y0 = 0.0;
                 let x1 = x0 + w;
-                let y1 = random_double_range(1.0, 101.0); // 随机高度
+                let y1 = random_float_range(1.0, 101.0); // 随机高度
                 let z1 = z0 + w;
 
                 let p0 = Point3::new(x0, y0, z0);
@@ -166,8 +166,8 @@ impl Scene for CornellFinalScene {
             look_from: Point3::new(478.0, 278.0, -600.0),
             look_at: Point3::new(278.0, 278.0, 0.0),
             up: Vec3::new(0.0, 1.0, 0.0),
-            background_color: Color::zero(), // 黑色背景 (因为场景是封闭的或者是黑暗的)
-            defocus_angle: 0.0,              // 无景深模糊
+            background_color: Color::ZERO, // 黑色背景 (因为场景是封闭的或者是黑暗的)
+            defocus_angle: 0.0,            // 无景深模糊
             ..Default::default()
         };
 

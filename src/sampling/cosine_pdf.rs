@@ -1,6 +1,6 @@
 //! 余弦 PDF 实现。
 
-use crate::math::{Onb, PdfValue, Vec3};
+use crate::math::{Onb, PdfValue, Vec3, Vec3Ext};
 use crate::sampling::Pdf;
 
 /// 余弦 PDF 实现。
@@ -27,11 +27,11 @@ impl CosinePdf {
 
 impl Pdf for CosinePdf {
     fn value(&self, direction: Vec3) -> PdfValue {
-        let cos_theta = direction.unit_vector().dot(self.uvw.w);
+        let cos_theta = direction.normalize().dot(self.uvw.w());
         if cos_theta <= 0.0 {
             0.0
         } else {
-            cos_theta / std::f64::consts::PI
+            cos_theta / std::f32::consts::PI
         }
     }
 

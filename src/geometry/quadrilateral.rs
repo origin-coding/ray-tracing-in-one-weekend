@@ -3,7 +3,7 @@
 use crate::geometry::{Aabb, HitRecord, Hittable, HittableList};
 use crate::material::Material;
 use crate::math::{Interval, PdfValue, Point3, Ray, Vec3};
-use crate::utils::random_double;
+use crate::utils::random_float;
 use std::sync::Arc;
 
 /// 四边形类型定义，包含起始点 Q 和两个向量 U、V，以及材质。
@@ -19,11 +19,11 @@ pub struct Quadrilateral {
 
     // 预计算的优化参数 (对应 C++ 中的 n, D, w)
     normal: Vec3,
-    d: f64,
+    d: f32,
     w: Vec3, // 用于快速计算平面坐标 alpha, beta
 
     // 四边形的面积，方便计算 PDF 值
-    area: f64,
+    area: f32,
 }
 
 impl Quadrilateral {
@@ -32,7 +32,7 @@ impl Quadrilateral {
         let n = u.cross(v);
 
         // 2. 计算法线 normal (归一化)
-        let normal = n.unit_vector();
+        let normal = n.normalize();
 
         // 3. 计算平面方程常数 D = n . Q
         let d = normal.dot(q);
@@ -195,7 +195,7 @@ impl Hittable for Quadrilateral {
 
         // ⚠️ 关键修复：使用宽松的边界检查 (EPSILON)
         // 允许 -0.001 到 1.001 的范围，防止因为浮点误差导致明明在表面上的点被判定为无效
-        const EPSILON: f64 = 1e-3;
+        const EPSILON: f32 = 1e-3;
         if alpha < -EPSILON || alpha > 1.0 + EPSILON || beta < -EPSILON || beta > 1.0 + EPSILON {
             return 0.0;
         }
@@ -212,7 +212,7 @@ impl Hittable for Quadrilateral {
     }
 
     fn random(&self, origin: Point3) -> Vec3 {
-        let p = self.q + self.u * random_double() + self.v * random_double();
+        let p = self.q + self.u * random_float() + self.v * random_float();
         p - origin
     }
 }

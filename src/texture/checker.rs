@@ -8,7 +8,7 @@ use std::sync::Arc;
 pub struct Checker {
     even: Arc<dyn Texture + Send + Sync>,
     odd: Arc<dyn Texture + Send + Sync>,
-    inv_scale: f64,
+    inv_scale: f32,
 }
 
 impl Checker {
@@ -25,7 +25,7 @@ impl Checker {
     pub fn new(
         even: Arc<dyn Texture + Send + Sync>,
         odd: Arc<dyn Texture + Send + Sync>,
-        scale: f64,
+        scale: f32,
     ) -> Self {
         Self {
             even,
@@ -45,7 +45,7 @@ impl Checker {
     /// # Returns
     ///
     /// 新的棋盘纹理。
-    pub fn from_color(even: Color, odd: Color, scale: f64) -> Self {
+    pub fn from_color(even: Color, odd: Color, scale: f32) -> Self {
         Self::new(
             Arc::new(SolidColor::new(even)),
             Arc::new(SolidColor::new(odd)),
@@ -55,7 +55,7 @@ impl Checker {
 }
 
 impl Texture for Checker {
-    fn value(&self, uv: (f64, f64), p: &Point3) -> Color {
+    fn value(&self, uv: (f32, f32), p: &Point3) -> Color {
         let x = (self.inv_scale * p.x).floor();
         let y = (self.inv_scale * p.y).floor();
         let z = (self.inv_scale * p.z).floor();

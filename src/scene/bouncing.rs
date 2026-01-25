@@ -1,10 +1,10 @@
 use crate::config::{CameraConfig, SceneConfig};
 use crate::geometry::{HittableList, Sphere};
 use crate::material::{Dielectric, Lambertian, Material, Metal};
-use crate::math::{Color, Point3, Vec3};
+use crate::math::{Color, Point3, Vec3, Vec3Ext};
 use crate::scene::{Scene, SceneContext};
 use crate::texture::Checker;
-use crate::utils::{random_double, random_double_range};
+use crate::utils::{random_float, random_float_range};
 use rand::distr::weighted::WeightedIndex;
 use rand::prelude::Distribution;
 use std::sync::Arc;
@@ -76,7 +76,7 @@ fn generate_random_balls(world: &mut HittableList) {
         // 金属生成器
         Box::new(|| {
             let albedo = Color::random_range(0.5, 1.0);
-            let fuzz = random_double_range(0.0, 0.5);
+            let fuzz = random_float_range(0.0, 0.5);
             Arc::new(Metal::new(albedo, fuzz))
         }),
         // 玻璃生成器
@@ -90,16 +90,16 @@ fn generate_random_balls(world: &mut HittableList) {
     for a in -11..11 {
         for b in -11..11 {
             let center = Point3::new(
-                a as f64 + 0.9 * random_double(),
+                a as f32 + 0.9 * random_float(),
                 0.2,
-                b as f64 + 0.9 * random_double(),
+                b as f32 + 0.9 * random_float(),
             );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 let generator_index = dist.sample(&mut rng);
                 let material = material_generators[generator_index]();
                 if generator_index == 0 {
-                    let center_end = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
+                    let center_end = center + Vec3::new(0.0, random_float_range(0.0, 0.5), 0.0);
                     world.add(Box::new(Sphere::moving(center, center_end, 0.2, material)));
                 } else {
                     world.add(Box::new(Sphere::stationary(center, 0.2, material)));

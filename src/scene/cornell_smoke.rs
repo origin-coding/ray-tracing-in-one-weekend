@@ -87,7 +87,7 @@ impl Scene for CornellSmokeScene {
             look_from: Point3::new(278.0, 278.0, -800.0),
             look_at: Point3::new(278.0, 278.0, 0.0),
             vfov: 40.0,
-            background_color: Color::zero(),
+            background_color: Color::ZERO,
             aspect_ratio: Some(1.0),
             ..Default::default()
         };

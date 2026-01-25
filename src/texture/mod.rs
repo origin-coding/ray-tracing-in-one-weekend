@@ -25,5 +25,5 @@ pub trait Texture {
     /// # Returns
     ///
     /// 点 p 上的颜色。
-    fn value(&self, uv: (f64, f64), p: &Point3) -> Color;
+    fn value(&self, uv: (f32, f32), p: &Point3) -> Color;
 }

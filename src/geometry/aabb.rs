@@ -14,7 +14,7 @@ pub struct Aabb {
 }
 
 impl Aabb {
-    const DELTA: f64 = 0.0001;
+    const DELTA: f32 = 0.0001;
 
     /// 创建一个新的轴对齐边界框。
     #[inline]

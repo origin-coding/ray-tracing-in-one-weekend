@@ -6,7 +6,7 @@ use crate::texture::Texture;
 /// 噪声纹理，使用 Perlin 噪声生成颜色。
 pub struct Noise {
     noise: Perlin,
-    scale: f64,
+    scale: f32,
 }
 
 impl Noise {
@@ -19,7 +19,7 @@ impl Noise {
     /// # Returns
     ///
     /// 新的噪声纹理。
-    pub fn new(scale: f64) -> Self {
+    pub fn new(scale: f32) -> Self {
         Self {
             noise: Perlin::new(),
             scale,
@@ -28,7 +28,7 @@ impl Noise {
 }
 
 impl Texture for Noise {
-    fn value(&self, _uv: (f64, f64), p: &Point3) -> Color {
+    fn value(&self, _uv: (f32, f32), p: &Point3) -> Color {
         // 计算点 p 的噪声值，范围 [-1, 1]
         let turbulence = self.noise.turbulence(*p, 7);
 
@@ -38,6 +38,6 @@ impl Texture for Noise {
         let s = self.scale * p.z + 10.0 * turbulence;
 
         // 将 s 映射到 [0, 1] 范围，用于颜色插值
-        Color::one() * 0.5 * (1.0 + s.sin())
+        Color::ONE * 0.5 * (1.0 + s.sin())
     }
 }

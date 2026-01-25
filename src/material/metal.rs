@@ -1,16 +1,16 @@
 use crate::geometry::HitRecord;
 use crate::material::{Material, ScatterRecord};
-use crate::math::{Color, Ray, Vec3};
+use crate::math::{Color, Ray, Vec3, Vec3Ext};
 
 /// 金属材质
 pub struct Metal {
     pub albedo: Color,
-    pub fuzz: f64,
+    pub fuzz: f32,
 }
 
 impl Metal {
     /// 创建一个新的金属材质实例。
-    pub fn new(albedo: Color, fuzz: f64) -> Self {
+    pub fn new(albedo: Color, fuzz: f32) -> Self {
         Self {
             albedo,
             fuzz: fuzz.clamp(0.0, 1.0),

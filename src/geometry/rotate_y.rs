@@ -4,14 +4,14 @@ use std::sync::Arc;
 
 pub struct RotateY {
     hittable: Arc<dyn Hittable + Send + Sync>,
-    sin_theta: f64,
-    cos_theta: f64,
+    sin_theta: f32,
+    cos_theta: f32,
 
     bounding_box: Aabb,
 }
 
 impl RotateY {
-    pub fn new(hittable: Arc<dyn Hittable + Send + Sync>, angle: f64) -> Self {
+    pub fn new(hittable: Arc<dyn Hittable + Send + Sync>, angle: f32) -> Self {
         // 1. 预计算 sin 和 cos
         let radians = angle.to_radians();
         let sin_theta = radians.sin();
@@ -20,8 +20,8 @@ impl RotateY {
         // 2. 计算旋转后的包围盒
         // 因为 AABB 必须是轴对齐的，旋转后的物体通常需要一个更大的盒子来包围
         let bbox = hittable.bounding_box();
-        let mut min = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
-        let mut max = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let mut min = Point3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY);
+        let mut max = Point3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
 
         // 遍历包围盒的 8 个顶点 (000, 001, 010, ..., 111)
         for i in 0..2 {

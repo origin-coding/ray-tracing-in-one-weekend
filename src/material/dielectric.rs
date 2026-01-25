@@ -1,21 +1,21 @@
 use crate::geometry::HitRecord;
 use crate::material::{Material, ScatterRecord};
 use crate::math::{Color, Ray};
-use crate::utils::random_double;
+use crate::utils::random_float;
 
 /// 电介质材质
 pub struct Dielectric {
-    pub refraction_index: f64,
+    pub refraction_index: f32,
 }
 
 impl Dielectric {
     /// 创建一个新的电介质材质实例。
-    pub fn new(refraction_index: f64) -> Self {
+    pub fn new(refraction_index: f32) -> Self {
         Self { refraction_index }
     }
 
     // Schlick 近似计算反射率
-    fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+    fn reflectance(cosine: f32, ref_idx: f32) -> f32 {
         // 计算基础反射率 r0
         let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
         let r0 = r0 * r0;
@@ -27,19 +27,19 @@ impl Dielectric {
 
 impl Material for Dielectric {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord<'_>) -> Option<ScatterRecord> {
-        let attenuation = Color::one();
+        let attenuation = Color::ONE;
         let ri = if rec.front_face {
             1.0 / self.refraction_index
         } else {
             self.refraction_index
         };
 
-        let unit_direction = r_in.direction.unit_vector();
+        let unit_direction = r_in.direction.normalize();
         let cos_theta = (-unit_direction).dot(rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let cannot_refract = ri * sin_theta > 1.0;
-        let direction = if cannot_refract || Self::reflectance(cos_theta, ri) > random_double() {
+        let direction = if cannot_refract || Self::reflectance(cos_theta, ri) > random_float() {
             unit_direction.reflect(rec.normal)
         } else {
             unit_direction.refract(rec.normal, ri)

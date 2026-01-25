@@ -23,7 +23,7 @@ pub struct RenderConfig {
     pub image_width: i32,
 
     #[arg(short = 'a', long = "aspect-ratio", help = "Aspect ratio of the image", default_value_t = 16.0 / 9.0)]
-    pub aspect_ratio: f64,
+    pub aspect_ratio: f32,
 
     #[arg(
         short = 's',
@@ -113,14 +113,14 @@ impl Config {
 
 /// 相机配置项，包含相机参数。
 pub struct CameraConfig {
-    pub vfov: f64,
+    pub vfov: f32,
     pub look_from: Point3,
     pub look_at: Point3,
     pub up: Vec3,
-    pub defocus_angle: f64,
-    pub focus_dist: f64,
+    pub defocus_angle: f32,
+    pub focus_dist: f32,
     pub background_color: Color,
-    pub aspect_ratio: Option<f64>,
+    pub aspect_ratio: Option<f32>,
 }
 
 impl Default for CameraConfig {
@@ -132,7 +132,7 @@ impl Default for CameraConfig {
             up: Vec3::new(0.0, 1.0, 0.0),
             defocus_angle: 0.0,
             focus_dist: 10.0,
-            background_color: Color::zero(),
+            background_color: Color::ZERO,
             aspect_ratio: None,
         }
     }
