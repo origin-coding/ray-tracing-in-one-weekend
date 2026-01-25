@@ -3,13 +3,24 @@
 [![Rust](https://img.shields.io/badge/language-Rust-orange.svg)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-这是一个使用 **Rust** 语言实现的光线追踪器。本项目完整实现了 Peter Shirley 的经典光线追踪教程系列三部曲：
+> **关于本项目**：
+> 本项目是 Peter Shirley 光线追踪三部曲的 Rust 完整实现。
+> 除了实现物理渲染功能外，本项目重点聚焦于 **Rust 工程化实践** 与 **性能演进**。从早期的手写数学库，逐步演进为基于工业级 SIMD 库的现代架构，探索了高性能计算与并发编程的最佳实践。
 
-1. 《Ray Tracing in One Weekend》
-2. 《Ray Tracing: The Next Week》
-3. 《Ray Tracing: The Rest of Your Life》
+## 🛠️ 工程化与架构演进 (Engineering & Architecture)
 
-利用 Rust 的语言特性（如 Trait 系统、枚举分发）进行了工程化重构，并实现了基于 **Monte Carlo** 的混合概率密度采样。
+本项目经历了一系列深度的重构与优化，旨在提升代码的可维护性与运行效率：
+
+* **性能与精度优化**：
+  * **SIMD 数学库迁移**：将早期的手写数学模块完整迁移至 **[glam](https://github.com/bitshifter/glam-rs)**，利用 SSE2/AVX 指令集显著加速了向量运算。
+  * **F32 精度降级**：完成了从全链路 `f64` 到 `f32` 的降级重构，在保证渲染质量的前提下，降低了内存带宽压力并提升了缓存命中率。
+  * **快速随机数生成**：使用 `SmallRng` 配合 **Thread-Local Storage (TLS)** 消除锁竞争，大幅提升了蒙特卡洛积分的采样效率。
+* **架构设计**：
+  * **混合采样架构**：实现了 `MixturePdf`，支持对光源和材质表面的多策略混合采样，解决了复杂场景的收敛难题。
+  * **并行渲染**：基于 **Rayon** 实现工作窃取（Work-stealing）模式的多线程渲染。
+  * **标准化 I/O**：支持 PPM P6（二进制）格式输出，大幅提升 I/O 效率。
+
+---
 
 ## 🖼️ 最终渲染结果
 
